@@ -1,0 +1,120 @@
+/* :root содержит переменные для цветов и других значений. 
+   Так удобнее управлять дизайном и быстро менять палитру. */
+:root {
+  --bg-color: #f7f8fa;         /* Основной фон приложения */
+  --sidebar-bg: #ccc;      /* Фон боковых панелей */
+  --canvas-bg: #ffffff;       /* Фон самого холста для редактирования */
+  --text-primary: #1a1a1a;    /* Основной цвет текста */
+  --text-secondary: #6b7280;  /* Второстепенный текст, подсказки */
+  --border-color: #e5e7eb;    /* Цвет тонких разделителей */
+  --accent-color: #4f46e5;    /* Яркий акцентный цвет (для кнопок, активных элементов) */
+  --accent-color-hover: #4338ca; /* Акцентный цвет при наведении */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Общие стили для всего приложения */
+.app {
+  display: flex;
+  height: 100vh;
+  font-family: 'Inter', sans-serif; /* Используем новый шрифт */
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+}
+
+/* Левая панель с элементами */
+.sidebar {
+  width: 240px; /* Немного шире для комфорта */
+  padding: 20px;
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color); /* Вместо резкой черной линии - мягкая */
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.2s ease; /* Плавная анимация при изменении ширины */
+}
+
+.sidebar h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 20px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Кнопка сохранения */
+.saveButton {
+  margin-top: auto; /* Прижимаем кнопку к низу */
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background-color: var(--accent-color);
+  border: none;
+  border-radius: 8px; /* Скругленные углы */
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease; /* Плавный переход */
+}
+
+.saveButton:hover {
+  background-color: var(--accent-color-hover);
+}
+
+.saveButton:active {
+  transform: scale(0.98); /* Легкое нажатие */
+}
+
+/* Основной контент (холст + правые панели) */
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden; /* Важно, чтобы внутренние элементы не вылезали */
+  padding: 24px;
+}
+
+/* Обертка для правой колонки панелей */
+.panelsWrapper {
+  background-color: #ccc;
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* Пространство между панелью свойств и панелью структуры */
+}
+
+/* Стилизуем сами панели (PropertiesPanel, StructurePanel) 
+   Предположим, что у них есть общий класс .panel или можно стилизовать их контейнеры */
+.panelsWrapper > div { /* Стилизуем дочерние div (PropertiesPanel, StructurePanel) */
+  background-color: var(--sidebar-bg);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Холст, где происходит редактирование */
+.canvasContainer { /* Добавь этот класс к контейнеру Canvas для стилизации */
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: auto; /* Позволяет скроллить холст, если контент большой */
+  min-height: 100%;
+  height: 100%;
+}
+
+/* Непосредственно сам холст (компонент Canvas) */
+.Canvas {
+  width: 100%;
+  max-width: 800px; /* Ограничиваем ширину для лучшей читаемости контента */
+  background-color: var(--canvas-bg);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  /* Дальнейшие стили для самого холста */
+}

@@ -1,0 +1,22 @@
+/* src/components/sidebar/DraggableSidebarItem.module.css */
+.sidebarItem {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  cursor: grab;
+  text-align: center;
+  background-color: #fafafa;
+  user-select: none;
+  box-sizing: border-box;
+  display: flex; /* Чтобы иконка и текст были в ряд */
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* Отступ между иконкой и текстом */
+}
+
+.sidebarItemIcon {
+  width: 24px; /* Примерный размер иконки */
+  height: 24px;
+  object-fit: contain;
+}

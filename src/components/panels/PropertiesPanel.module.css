@@ -1,0 +1,29 @@
+/* src/components/panels/PropertiesPanel.module.css */
+.propertiesPanel {
+  width: 250px;
+  padding: 10px;
+  border-left: 1px solid #ccc;
+  background-color: #fff;
+  overflow-y: auto;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.propertyGroup {
+  margin-bottom: 15px;
+}
+
+.propertyGroup label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.contentTextArea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+  resize: vertical;
+}

@@ -1,0 +1,60 @@
+.toolbar {
+    position: fixed;
+    /* У тебя уже есть */
+    transform: translateX(-50%);
+    /* И это тоже есть */
+    background-color: #222;
+    color: white;
+    border-radius: 6px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    /* Небольшой отступ между элементами */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: opacity 0.15s ease-in-out;
+    /* Плавное появление */
+}
+
+/* Стили для кнопок внутри тулбара */
+.toolbar button {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-family: sans-serif;
+    min-width: 32px;
+    /* Чтобы кнопки не были слишком узкими */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.toolbar button:hover {
+    background-color: #444;
+}
+
+/* Стиль для активной кнопки */
+.toolbar button.active,
+:global(.toolbarButtonGroup) button.active {
+    background-color: #5a5a5a;
+    color: #fff;
+}
+
+/* Разделитель */
+.toolbarSeparator,
+:global(.toolbarSeparator) {
+    width: 1px;
+    height: 20px;
+    background-color: #555;
+    margin: 0 4px;
+}
+
+/* Группа кнопок */
+:global(.toolbarButtonGroup) {
+    display: flex;
+    gap: 2px;
+}

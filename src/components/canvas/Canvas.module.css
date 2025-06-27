@@ -1,0 +1,32 @@
+/* src/components/canvas/Canvas.module.css */
+.canvasContainer {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  position: relative;
+  background-color: #e9ebee;
+}
+
+.canvas {
+  min-height: 100%;
+  background-color: white;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+  flex: 1;
+}
+
+.emptyCanvasDropZone {
+  padding: 80px;
+  text-align: center;
+  color: #aaa;
+  border: 2px dashed #ccc;
+  margin: 10px 0;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.canvasOver {
+  background-color: #d8eafc;
+}

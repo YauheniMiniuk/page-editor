@@ -1,0 +1,12 @@
+/* src/components/common/DragOverlayContent.module.css */
+.dragOverlayItem {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  text-align: center;
+  background-color: lightblue;
+  user-select: none;
+  box-sizing: border-box;
+  opacity: 0.7; /* Для визуального отличия от обычного элемента */
+}

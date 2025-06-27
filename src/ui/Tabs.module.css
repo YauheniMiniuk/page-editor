@@ -1,0 +1,46 @@
+.tabs {
+  width: 100%;
+}
+
+.tabHeaders {
+  display: flex;
+  border-bottom: 1px solid #dee2e6; /* Более мягкий цвет границы */
+  margin-bottom: -1px; /* Технический прием для красивого перекрытия границ */
+}
+
+.tabButton {
+  padding: 10px 16px; /* Немного увеличим отступы */
+  border: none;
+  border-bottom: 3px solid transparent; /* Граница будет толще и заметнее */
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #495057;
+  /* BEAUTIFY: Добавляем плавный переход для фона и цвета */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.tabButton:hover {
+  background-color: #f8f9fa; /* Мягкий фон при наведении */
+  color: #0056b3;
+}
+
+/* Добавляем стиль для фокуса (важно для доступности) */
+.tabButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  border-radius: 4px;
+}
+
+.tabButton.active {
+  border-bottom-color: #007bff;
+  font-weight: 600; /* Чуть жирнее, чем bold */
+  color: #007bff;
+}
+
+.tabContent {
+  padding: 16px; /* Увеличим внутренний отступ */
+  border: 1px solid #dee2e6;
+  border-top: none; /* Убираем верхнюю рамку, т.к. есть граница у заголовков */
+  border-radius: 0 0 4px 4px; /* Скругляем только нижние углы */
+}

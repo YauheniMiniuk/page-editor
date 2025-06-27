@@ -1,0 +1,27 @@
+/*
+ * Стили для TextBlock
+ */
+
+.textBlock {
+  /* Сбрасываем браузерные отступы по умолчанию для тегов p, h, blockquote */
+  margin: 0;
+  padding: 0;
+  width: 100%; /* Занимает всю ширину родительского элемента */
+  box-sizing: border-box;
+}
+
+/* Стили для режима редактирования */
+.textBlock[contentEditable="true"] {
+  cursor: text;
+  outline: none; /* Убираем стандартную рамку фокуса */
+  /* Можно добавить свою рамку фокуса, если нужно */
+  /* &:focus { box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5); } */
+}
+
+/* Стили для плейсхолдера, когда текст пустой */
+.textBlock[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: #a0a0a0;
+  font-style: italic;
+  pointer-events: none; /* Чтобы плейсхолдер не мешал клику */
+}

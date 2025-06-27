@@ -1,0 +1,17 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.label {
+  font-weight: bold;
+}
+
+.input {
+  width: 32px;
+  height: 32px;
+  border: none;
+  padding: 0;
+}
