@@ -1,22 +1,58 @@
-/* src/components/sidebar/DraggableSidebarItem.module.css */
 .sidebarItem {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column; /* Ставим иконку над текстом */
+  align-items: center;    /* Центрируем по горизонтали */
+  justify-content: center;/* Центрируем по вертикали */
+  gap: 8px;             /* Отступ между иконкой и текстом */
+  
+  /* width: 100%; <-- Убираем эту строку, сетка сама управляет шириной */
+  
+  /* Делаем элемент более квадратным */
+  padding: 16px 8px;
+  height: 90px; /* Можешь подобрать высоту по вкусу */
+
+  border-radius: var(--border-radius-md);
+  background-color: transparent;
+  border: 1px solid transparent;
   cursor: grab;
-  text-align: center;
-  background-color: #fafafa;
   user-select: none;
   box-sizing: border-box;
-  display: flex; /* Чтобы иконка и текст были в ряд */
-  align-items: center;
-  justify-content: center;
-  gap: 8px; /* Отступ между иконкой и текстом */
+  transition: var(--transition-fast);
+  color: var(--ui-text-primary);
 }
 
-.sidebarItemIcon {
-  width: 24px; /* Примерный размер иконки */
-  height: 24px;
-  object-fit: contain;
+.sidebarItem:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-color);
+}
+
+.sidebarItem:active {
+  cursor: grabbing;
+  background-color: var(--accent-primary-subtle-bg);
+  border-color: var(--accent-primary);
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;  /* Можно сделать иконку чуть больше */
+  height: 32px;
+  color: var(--ui-text-secondary);
+  transition: var(--transition-fast);
+}
+
+.sidebarItem:hover .iconWrapper {
+  color: var(--ui-text-accent);
+}
+
+.label {
+  font-weight: 500;
+  font-size: 12px;
+  text-align: center;
+  
+  width: 100%;             /* Метка должна знать свою ширину */
+  white-space: nowrap;      /* Запрещаем перенос текста на новую строку */
+  overflow: hidden;         /* Прячем всё, что не влезло */
+  text-overflow: ellipsis;  /* Добавляем "..." в конце */
 }

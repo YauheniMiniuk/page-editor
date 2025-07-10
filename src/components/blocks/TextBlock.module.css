@@ -1,27 +1,34 @@
-/*
- * Стили для TextBlock
- */
-
-.textBlock {
-  /* Сбрасываем браузерные отступы по умолчанию для тегов p, h, blockquote */
-  margin: 0;
+.text {
+  min-width: 1px;
+  margin: 0 0 1em 0; /* Стандартный отступ параграфа */
   padding: 0;
-  width: 100%; /* Занимает всю ширину родительского элемента */
-  box-sizing: border-box;
+  white-space: pre-wrap;
 }
 
-/* Стили для режима редактирования */
-.textBlock[contentEditable="true"] {
-  cursor: text;
-  outline: none; /* Убираем стандартную рамку фокуса */
-  /* Можно добавить свою рамку фокуса, если нужно */
-  /* &:focus { box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5); } */
+/* --- Выравнивание текста --- */
+.variant-textAlign-left { text-align: left; }
+.variant-textAlign-center { text-align: center; }
+.variant-textAlign-right { text-align: right; }
+
+/* --- Размеры шрифта (пресеты) --- */
+/* `has-` - это классический префикс Gutenberg */
+.variant-fontSize-small { font-size: 0.875rem; }
+.variant-fontSize-normal { font-size: 1rem; }
+.variant-fontSize-large { font-size: 1.25rem; }
+.variant-fontSize-huge { font-size: 1.75rem; }
+
+.hasDropCap:not(:focus)::first-letter {
+  float: left;
+  font-size: 4em;
+  line-height: 0.8;
+  font-weight: bold;
+  margin: 0.05em 0.1em 0 0;
 }
 
-/* Стили для плейсхолдера, когда текст пустой */
-.textBlock[data-placeholder]:empty::before {
-  content: attr(data-placeholder);
-  color: #a0a0a0;
-  font-style: italic;
-  pointer-events: none; /* Чтобы плейсхолдер не мешал клику */
-}
+/* Текст */
+.variant-textColor-primary { color: var(--accent-primary); }
+.variant-textColor-secondary { color: var(--ui-text-secondary); }
+
+/* Фон */
+.variant-backgroundColor-light-gray { background-color: var(--bg-hover); }
+.variant-backgroundColor-light-accent { background-color: var(--accent-primary-subtle-bg); }

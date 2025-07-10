@@ -1,12 +1,53 @@
-/* src/components/common/DragOverlayContent.module.css */
-.dragOverlayItem {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-bottom: 10px;
-  text-align: center;
-  background-color: lightblue;
-  user-select: none;
+.dragOverlay {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+
+  width: 160px;
+  
+  /* Используем наши переменные для фона и рамки */
+  background-color: var(--bg-canvas); 
+  border: 1px solid var(--border-color);
+  
+  /* Добавляем тени и скругление */
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+
+  /* Делаем "призрак" полупрозрачным */
+  opacity: 0.85;
+
+  /* Убираем возможность выделить текст на "призраке" */
+  user-select: none; 
   box-sizing: border-box;
-  opacity: 0.7; /* Для визуального отличия от обычного элемента */
+  
+  /* Устанавливаем цвет текста и иконки */
+  color: var(--ui-text-primary);
+  font-weight: 500;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  color: var(--ui-text-secondary);
+}
+
+.label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drag-overlay-wrapper {
+  /* Важно, чтобы сам оверлей не перехватывал события мыши */
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+/* Опционально: можно добавить стили для каждого типа "призрака",
+   чтобы они выглядели немного по-разному, если нужно. */
+.drag-overlay-wrapper > * {
+  /* Применяем тень ко всем типам призраков */
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--border-radius-md);
 }

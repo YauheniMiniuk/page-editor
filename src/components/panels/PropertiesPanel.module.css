@@ -1,29 +1,57 @@
-/* src/components/panels/PropertiesPanel.module.css */
-.propertiesPanel {
-  width: 250px;
-  padding: 10px;
-  border-left: 1px solid #ccc;
-  background-color: #fff;
+/* components/panels/PropertiesPanel.module.css */
+.panel {
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-left: 1px solid #e9ecef;
   overflow-y: auto;
-  flex-shrink: 0;
-  box-sizing: border-box;
+  width: 280px;
 }
 
-.propertyGroup {
-  margin-bottom: 15px;
+.settingGroup {
+  margin-bottom: 16px;
 }
 
-.propertyGroup label {
+.label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #495057;
 }
 
-.contentTextArea {
-  width: 100%;
+.buttonGroup {
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #ced4da;
+}
+
+.buttonGroup button {
+  flex-grow: 1;
   padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-sizing: border-box;
-  resize: vertical;
+  border: none;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-left: 1px solid #ced4da;
+  font-size: 18px; /* Для иконок */
+}
+
+.buttonGroup button:first-child {
+  border-left: none;
+}
+
+.buttonGroup button:hover {
+  background-color: #e9ecef;
+}
+
+.buttonGroup button.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.separator {
+  border: none;
+  border-top: 1px solid #e9ecef;
+  margin: 20px 0;
 }

@@ -3,13 +3,16 @@ import {
   removeBlockRecursive,
   updateBlockRecursive,
   insertBlockRecursive,
-  findBlockAndParent
+  findBlockAndParent,
+  swapBlocksRecursive
 } from '../utils/blockUtils';
 
 const useBlockManagement = (initialBlocks = []) => {
   const [blocks, setBlocks] = useState(initialBlocks);
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [activeId, setActiveId] = useState(null);
+  const [activeDragItem, setActiveDragItem] = useState(null);
+  const [overDropZone, setOverDropZone] = useState(null);
 
   // Все эти функции остаются без изменений.
   const handleDeleteBlock = useCallback((id) => {
@@ -42,6 +45,10 @@ const useBlockManagement = (initialBlocks = []) => {
     }
   }, [blocks]);
 
+  const swapBlock = useCallback((blockId, direction) => {
+    setBlocks(prev => swapBlocksRecursive(prev, blockId, direction));
+  }, []);
+
   const actions = useMemo(() => ({
     update: handleUpdateBlock,
     delete: handleDeleteBlock,
@@ -51,16 +58,21 @@ const useBlockManagement = (initialBlocks = []) => {
     selectSibling: handleSelectSibling,
     setBlocks: setBlocks,
     setActiveId: setActiveId,
+    swapBlock,
   }), [
-    handleUpdateBlock, handleDeleteBlock, handleAddBlock, 
-    setSelectedBlockId, handleSelectParent, handleSelectSibling, 
-    setBlocks, setActiveId
+    handleUpdateBlock, handleDeleteBlock, handleAddBlock,
+    setSelectedBlockId, handleSelectParent, handleSelectSibling,
+    setBlocks, setActiveId, swapBlock
   ]);
 
   return {
     blocks,
     selectedBlockId,
     activeId,
+    activeDragItem,
+    setActiveDragItem,
+    overDropZone,
+    setOverDropZone,
     actions,
   };
 };

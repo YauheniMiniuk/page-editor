@@ -1,60 +1,79 @@
 .toolbar {
-    position: fixed;
-    /* У тебя уже есть */
-    transform: translateX(-50%);
-    /* И это тоже есть */
-    background-color: #222;
-    color: white;
-    border-radius: 6px;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    /* Небольшой отступ между элементами */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    transition: opacity 0.15s ease-in-out;
-    /* Плавное появление */
+  position: fixed;
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Немного увеличим отступ */
+  padding: 6px;
+  background-color: var(--bg-toolbar);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color); 
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  transition: opacity 0.15s ease-in-out;
 }
 
-/* Стили для кнопок внутри тулбара */
-.toolbar button {
-    background: transparent;
-    border: none;
-    color: white;
-    cursor: pointer;
-    padding: 6px 8px;
-    border-radius: 4px;
-    font-family: sans-serif;
-    min-width: 32px;
-    /* Чтобы кнопки не были слишком узкими */
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* Группа кнопок больше не нуждается в собственном фоне */
+.toolbarButtonGroup {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
-.toolbar button:hover {
-    background-color: #444;
+/*
+ * ОБЩИЙ СТИЛЬ ДЛЯ ВСЕХ КНОПОК В ТУЛБАРЕ
+ * Он применяется ко всем дочерним элементам, которые могут быть кнопками.
+ * Это делает стили консистентными.
+ */
+.toolbar > :global(button),
+.toolbarButtonGroup > :global(button) {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 16px; /* Для иконок-символов */
+  transition: var(--transition-fast);
 }
 
-/* Стиль для активной кнопки */
-.toolbar button.active,
-:global(.toolbarButtonGroup) button.active {
-    background-color: #5a5a5a;
-    color: #fff;
+.toolbar > :global(button):hover,
+.toolbarButtonGroup > :global(button):hover {
+  background-color: var(--bg-toolbar-hover);
 }
 
-/* Разделитель */
-.toolbarSeparator,
-:global(.toolbarSeparator) {
-    width: 1px;
-    height: 20px;
-    background-color: #555;
-    margin: 0 4px;
+.toolbar > :global(button):disabled,
+.toolbarButtonGroup > :global(button):disabled {
+  color: var(--text-secondary);
+  background-color: transparent;
+  cursor: not-allowed;
 }
 
-/* Группа кнопок */
-:global(.toolbarButtonGroup) {
-    display: flex;
-    gap: 2px;
+.toolbar :global(button.active) {
+  background-color: var(--bg-toolbar-active);
+  color: white;
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  cursor: grab;
+  color: var(--ui-text-secondary);
+}
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+/* Разделитель стал тоньше и аккуратнее */
+.toolbarSeparator {
+  width: 1px;
+  height: 18px; /* Чуть меньше высоты кнопок */
+  background-color: var(--separator-color);
+  margin: 0 4px;
 }

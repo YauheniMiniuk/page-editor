@@ -1,0 +1,72 @@
+/* Стили для основного контейнера аккордеона */
+.accordion {
+    width: 100%;
+    border: 1px solid #e5e7eb; /* Светлая граница */
+    border-radius: 8px;
+    overflow: hidden; /* Скрывает углы дочерних элементов */
+}
+
+/* Стили для отдельного элемента аккордеона */
+.item {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.item:last-child {
+    border-bottom: none;
+}
+
+/* Стили для заголовка-кнопки */
+.itemHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 16px 20px;
+    background-color: #ffffff;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.itemHeader:hover {
+    background-color: #f9fafb; /* Легкий фон при наведении */
+}
+
+/* Контейнер для заголовка, чтобы он занимал все доступное место */
+.itemTitle {
+    flex-grow: 1;
+}
+
+/* Иконка-шеврон */
+.itemIcon {
+    margin-left: 16px;
+    flex-shrink: 0;
+    transition: transform 0.3s ease-in-out;
+    color: #6b7280;
+}
+
+.itemIconOpen {
+    transform: rotate(180deg);
+}
+
+/* Контейнер для контента (для анимации) */
+.itemContent {
+    overflow: hidden;
+    background-color: #f9fafb;
+}
+
+/* Внутренняя обертка для отступов */
+.itemContentInner {
+    padding: 20px;
+    border-top: 1px solid #e5e7eb; /* Разделитель между заголовком и контентом */
+}
+
+/* Обертка для самого блока accordion-item в режиме редактирования */
+/* Нужна, чтобы BlockRenderer мог применять свои стили (например, outline) */
+.accordionItemWrapper {
+    /* Пусто, так как визуально этот блок не должен ничего добавлять, */
+    /* он лишь логическая группировка для BlockRenderer. */
+}

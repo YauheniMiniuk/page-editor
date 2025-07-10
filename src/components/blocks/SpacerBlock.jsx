@@ -1,64 +1,41 @@
-import React from 'react';
-import styles from './SpacerBlock.module.css';
-
-// UI-компоненты
-import Tabs from '../../ui/Tabs';
-import Tab from '../../ui/Tab';
+// components/blocks/SpacerBlock.jsx
+import React, { forwardRef } from 'react';
 import Input from '../../ui/Input';
-import ColorPicker from '../../ui/ColorPicker';
-import Checkbox from '../../ui/Checkbox';
+import { SpacerIcon } from '../../utils/icons';
 
-const SpacerBlock = ({ block }) => {
-  const { props = {}, styles: blockStyles = {} } = block;
-  const { showLine = false } = props;
-
-  if (showLine) {
-    const lineStyles = {
-      borderTopWidth: blockStyles.height || '1px',
-      borderTopColor: blockStyles.color || '#e0e0e0',
-    };
-    return <hr className={styles.divider} style={lineStyles} />;
-  }
-
-  return <div style={{ height: blockStyles.height || '20px' }} />;
-};
-
-// --- Статическая информация ---
-SpacerBlock.blockInfo = {
-  type: 'SPACER',
-  label: 'Отступ',
-  defaultData: {
-    type: 'SPACER',
-    props: { showLine: false },
-    styles: { height: '30px' },
-  },
-};
-
-// --- Панель свойств ---
-SpacerBlock.getEditor = ({ block, onChange }) => {
-  const { props = {}, styles = {} } = block;
-  const isLine = props.showLine || false;
-
-  const handlePropsChange = (newProps) => onChange({ props: { ...props, ...newProps } });
-  const handleStyleChange = (newStyles) => onChange({ styles: { ...styles, ...newStyles } });
-  
+const SpacerBlock = forwardRef(({ block, onClick, ...restProps }, ref) => {
   return (
-    <Tabs>
-      <Tab title="Настройки">
-        <Checkbox label="Показывать линию-разделитель" checked={isLine} onChange={(e) => handlePropsChange({ showLine: e.target.checked })} />
-        <hr/>
-        <Input
-          label={isLine ? "Толщина линии (px)" : "Высота отступа (px)"}
-          type="number"
-          value={parseInt(styles.height) || (isLine ? 1 : 30)}
-          onChange={(e) => handleStyleChange({ height: `${e.target.value}px` })}
-        />
-        {isLine && (
-          <ColorPicker label="Цвет линии" value={styles.color || '#e0e0e0'} onChange={(val) => handleStyleChange({ color: val })} />
-        )}
-      </Tab>
-    </Tabs>
+    <div
+      ref={ref}
+      style={{ height: block.styles?.height || '20px' }}
+      onClick={onClick}
+      {...restProps}
+    />
   );
+});
+
+SpacerBlock.blockInfo = {
+  type: 'core/spacer',
+  label: 'Отступ',
+  icon: <SpacerIcon />,
+  defaultData: {
+    type: 'core/spacer',
+    styles: { height: '20px' },
+  },
+  getEditor: ({ block, onChange }) => {
+    const { styles = {} } = block;
+    const handleStyleChange = (newStyles) => onChange({ styles: { ...styles, ...newStyles } });
+
+    return (
+      <div>
+        <Input
+          label="Высота (в px, rem, %)"
+          value={styles.height || ''}
+          onChange={(e) => handleStyleChange({ height: e.target.value })}
+        />
+      </div>
+    )
+  }
 };
 
 export default SpacerBlock;

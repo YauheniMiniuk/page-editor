@@ -1,9 +1,8 @@
-/* src/components/panels/StructurePanel.module.css */
 .structurePanel {
-  width: 250px;
+  width: 280px; /* Сделаем чуть шире */
   padding: 10px;
-  border-left: 1px solid #ccc;
-  background-color: #fff;
+  border-left: 1px solid var(--border-color);
+  background-color: var(--bg-canvas);
   overflow-y: auto;
   flex-shrink: 0;
   box-sizing: border-box;
@@ -11,27 +10,173 @@
 
 .structureUl {
   list-style: none;
-  padding-left: 0; /* Удаляем стандартный padding */
+  padding-left: 0;
   margin: 0;
 }
 
-.structureLi {
-  padding: 5px;
+.itemWrapper {
+  position: relative;
+  list-style: none; /* Добавляем на всякий случай */
+  margin-bottom: 4px;
+}
+
+.dropZoneTop, .dropZoneBottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  z-index: 10;
+  left: var(--indent-size); 
+}
+.dropZoneTop { top: -4px; }
+.dropZoneBottom { bottom: -4px; }
+
+.dropTargetBefore::before,
+.dropTargetAfter::after {
+  content: '';
+  position: absolute;
+  height: 2px;
+  background-color: var(--accent-primary);
+  z-index: 20;
+  /* Используем переменную для отступа, которую задали в JSX */
+  left: var(--indent-size); 
+  right: 0;
+}
+
+/* Линия СВЕРХУ */
+.dropTargetBefore::before {
+  top: 0;
+}
+
+/* Линия СНИЗУ */
+.dropTargetAfter::after {
+  bottom: 0;
+}
+
+.dropTargetInner {
+  /* Просто подсвечиваем фон, не меняя геометрию */
+  background-color: var(--accent-primary-subtle-bg);
+}
+
+.structureItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: var(--border-radius-md);
   margin-bottom: 2px;
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.structureItem:hover {
+  background-color: var(--bg-hover);
+}
+
+.itemSelected {
+  background-color: var(--accent-primary-subtle-bg);
+  color: var(--accent-primary);
+}
+
+.itemContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Занимает все доступное место, чтобы клик работал по всей ширине */
+  flex-grow: 1;
+  /* Предотвращает "убегание" текста */
+  min-width: 0;
+}
+
+.toggleButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ui-text-secondary);
+  width: 16px;
+  height: 16px;
+  padding: 0;
+}
+
+.itemIcon {
+  flex-shrink: 0; /* Иконка не должна сжиматься */
+  color: var(--ui-text-secondary);
+}
+.itemSelected .itemIcon {
+  color: var(--accent-primary);
+}
+
+.itemLabel {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0; /* Появляются при наведении */
+  transition: opacity 0.2s ease;
+}
+
+.structureItem:hover .itemActions {
+  opacity: 1;
+}
+
+.dragHandle {
+  cursor: grab;
+  color: var(--ui-text-secondary);
+  padding: 4px;
+}
+
+.childrenList {
+  position: relative;
+  padding-left: 5px;
+  margin-top: 4px;
+  border-radius: var(--border-radius-sm);
   transition: background-color 0.2s ease;
 }
 
-.structureLi:hover {
-  background-color: #f0f0f0;
+.childrenList:empty {
+  min-height: 34px; /* Задаем минимальную высоту для удобства попадания */
+  margin-bottom: 4px;
+  background-color: var(--bg-hover);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius-sm);
 }
 
-.structureLiSelected {
-  background-color: #e0e0e0;
-  font-weight: bold;
+.ghost {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px; /* Примерная высота, как у обычного элемента */
+  padding: 4px 8px;
+  background-color: var(--accent-primary-subtle-bg);
+  border: 1px dashed var(--accent-primary);
+  border-radius: var(--border-radius-md);
+  opacity: 0.7;
+  margin-bottom: 2px;
+  box-sizing: border-box;
 }
 
-.structureChildrenContainer {
-  padding-left: 15px; /* Отступ для вложенных элементов */
+.isCollapsed {
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  height: 0;
+}
+
+.emptyDropPlaceholder {
+    list-style: none;
+    padding: 10px;
+    font-size: 12px;
+    text-align: center;
+    color: var(--ui-text-secondary);
+    background-color: var(--bg-hover);
+    border-radius: var(--border-radius-sm);
+    border: 1px dashed var(--border-color);
 }

@@ -1,17 +1,93 @@
+/* Основной контейнер */
 .wrapper {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
-  margin-bottom: 10px;
+  font-family: sans-serif;
+  position: relative; /* Важно для позиционирования popover */
 }
 
 .label {
   font-weight: bold;
+  font-size: 14px;
 }
 
-.input {
+/* Контейнер для главного элемента выбора и кнопки сброса */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Квадратик, показывающий текущий цвет */
+.swatch {
+  position: relative;
+  width: 46px;
+  height: 30px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  /* Магия для отображения прозрачности */
+  background-image: linear-gradient(45deg, #eee 25%, transparent 25%),
+                    linear-gradient(-45deg, #eee 25%, transparent 25%),
+                    linear-gradient(45deg, transparent 75%, #eee 75%),
+                    linear-gradient(-45deg, transparent 75%, #eee 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+}
+
+/* Внутренняя часть с цветом */
+.color {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 3px;
+}
+
+.popover {
+  position: absolute;
+  z-index: 2;
+  top: 45px;
+  left: 0;
+}
+
+.resetButton {
+  border: none;
+  background: #f0f0f0;
   width: 32px;
   height: 32px;
-  border: none;
-  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.resetButton:hover {
+  background-color: #e0e0e0;
+  transform: scale(1.1);
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+}
+
+.presetSwatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.2);
+  transition: transform 0.15s ease-out;
+}
+
+.presetSwatch:hover {
+  transform: scale(1.15);
 }

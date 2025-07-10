@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { motion } from 'framer-motion';
 import styles from './BlockRenderer.module.css';
 import { BLOCK_TYPES, BLOCK_COMPONENTS } from '../../utils/constants';
 import BlockToolbar from '../common/BlockToolbar';
@@ -7,7 +8,7 @@ import { findBlockAndParent } from '../../utils/blockUtils';
 import useBlockManagement from '../../hooks/useBlockManagement';
 import { useBlockManager } from '../../contexts/BlockManagementContext';
 
-const BlockRenderer = ({ block, mode, parentDirection = 'column' }) => {
+const BlockRenderer = ({ block, mode, isFirst, isLast, motionProps }) => {
   const blockRef = useRef(null);
   const isEditMode = mode === 'edit';
   const {
@@ -16,159 +17,155 @@ const BlockRenderer = ({ block, mode, parentDirection = 'column' }) => {
     blocks,
     actions
   } = useBlockManager();
+  const [isEditingText, setIsEditingText] = useState(false);
 
   const isDragging = activeId !== null;
+  const ComponentToRender = BLOCK_COMPONENTS[block.type];
+  const isContainer = !!ComponentToRender?.blockInfo?.isContainer;
+  const isSelected = isEditMode && selectedBlockId === block.id;
 
-
-  const { attributes, listeners, setNodeRef: setDraggableNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef: setDraggableNodeRef } = useDraggable({
     id: block.id,
-    data: { block, isCanvasItem: true },
-    disabled: !isEditMode,
+    data: { block, isCanvasItem: true, context: 'canvas' },
+    disabled: !isEditMode || isEditingText,
   });
 
   const { setNodeRef: dropTop, isOver: overTop } = useDroppable({
     id: `${block.id}-top`,
-    data: { targetId: block.id, position: 'top' },
+    data: { targetId: block.id, position: 'top', context: 'canvas' },
     disabled: !isEditMode,
   });
   const { setNodeRef: dropBottom, isOver: overBottom } = useDroppable({
     id: `${block.id}-bottom`,
-    data: { targetId: block.id, position: 'bottom' },
+    data: { targetId: block.id, position: 'bottom', context: 'canvas' },
     disabled: !isEditMode,
   });
-  // Новые зоны для горизонтального режима
   const { setNodeRef: dropLeft, isOver: overLeft } = useDroppable({
     id: `${block.id}-left`,
-    data: { targetId: block.id, position: 'left' },
+    data: { targetId: block.id, position: 'left', context: 'canvas' },
     disabled: !isEditMode,
   });
   const { setNodeRef: dropRight, isOver: overRight } = useDroppable({
     id: `${block.id}-right`,
-    data: { targetId: block.id, position: 'right' },
+    data: { targetId: block.id, position: 'right', context: 'canvas' },
     disabled: !isEditMode,
   });
 
   const { setNodeRef: dropInner, isOver: isOverInner } = useDroppable({
     id: `${block.id}-inner`,
-    data: { targetId: block.id, position: 'inner' },
-    disabled: !isEditMode || block.type !== BLOCK_TYPES.CONTAINER,
+    data: { targetId: block.id, position: 'inner', context: 'canvas' },
+    disabled: !isEditMode || !isContainer,
   });
+
+  const mergeRefs = (node) => {
+    setDraggableNodeRef(node); // для перетаскивания
+    blockRef.current = node;   // для тулбара
+  };
+
+  const enterTextEditMode = () => {
+    if (isEditMode && block.type === 'core/text') {
+      setIsEditingText(true);
+      // Просто ставим фокус. Браузер сам поставит курсор в место клика.
+      blockRef.current?.focus();
+    }
+  };
+
+  const handleFocusOut = () => {
+    setIsEditingText(false);
+  };
+
+  const handleDoubleClick = () => {
+    enterTextEditMode();
+  };
 
   const wrapperClasses = [
     styles.blockWrapper,
-    isEditMode && selectedBlockId === block.id ? styles.selectedWrapper : '',
-    isDragging ? styles.dragging : ''
+    selectedBlockId === block.id && isEditMode ? styles.selectedWrapper : '',
   ].filter(Boolean).join(' ');
 
   const style = {
-    // ...(block.styles || {}),
-    transform: isEditMode && transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-    opacity: isEditMode && activeId === block.id ? 0.5 : 1,
+    opacity: activeId === block.id ? 0.5 : 1,
   };
 
-  const ComponentToRender = BLOCK_COMPONENTS[block.type];
-
   const getToolbarContent = () => {
-    // Эта функция будет вызываться только в режиме редактирования, поэтому проверки на isEditMode не нужны.
-    const blockSpecificItems = ComponentToRender?.getToolbarItems?.({
+    return ComponentToRender?.blockInfo?.getToolbarItems?.({
       block,
       actions,
-    }) || [];
-
-    const blockInfo = findBlockAndParent(blocks, block.id);
-    const siblings = blockInfo?.parent ? blockInfo.parent.children : blocks;
-    const isFirst = blockInfo?.index === 0;
-    const isLast = blockInfo?.index === siblings.length - 1;
-
-    const baseItems = (
-      <>
-        {blockInfo?.parent && (
-          <button title="Выбрать родителя" onClick={() => actions.selectParent(block.id)}>↑</button>
-        )}
-        {!isFirst && (
-          <button title="Предыдущий элемент" onClick={() => actions.selectSibling(block.id, 'prev')}>←</button>
-        )}
-        {!isLast && (
-          <button title="Следующий элемент" onClick={() => actions.selectSibling(block.id, 'next')}>→</button>
-        )}
-      </>
-    );
-
-    return (
-      <>
-        {baseItems}
-        {blockSpecificItems.length > 0 && <div className={styles.toolbarSeparator}></div>}
-        {blockSpecificItems}
-      </>
-    );
+    }) || null;
   };
 
   if (!ComponentToRender) {
     return <div>Неизвестный тип блока: {block.type}</div>;
   }
 
+  if (block.isPreview) {
+    return <div className={styles.previewPlaceholder} />;
+  }
+
   const handleWrapperClick = (e) => {
     if (isEditMode) {
       e.stopPropagation();
-      actions.select(block.id);
+
+      // Если кликнули по уже выделенному текстовому блоку - входим в режим редактирования
+      if (block.id === selectedBlockId && block.type === 'core/text') {
+        enterTextEditMode();
+        return; // Прерываем выполнение, чтобы не вызывать select еще раз
+      }
+
+      // В противном случае - просто выделяем блок
+      if (block.id !== selectedBlockId) {
+        actions.select(block.id);
+      }
     }
   };
 
-  const renderedChildren = block.children?.map((childBlock) => (
-    // FIX: Больше не передаем isFirst и isLast
-    <BlockRenderer
-      key={childBlock.id}
-      block={childBlock}
-      mode={mode}
-      parentDirection={block.props?.direction || 'column'}
-    />
-  ));
+  const renderedChildren = block.children?.map((childBlock, index) => {
+    return (
+      <BlockRenderer
+        key={childBlock.id}
+        block={childBlock}
+        mode={mode}
+        isFirst={index === 0}
+        isLast={index === block.children.length - 1}
+        motionProps={motionProps}
+      />
+    );
+  });
+
+
 
   return (
-    <div
-      ref={setDraggableNodeRef}
-      className={wrapperClasses}
-      style={style}
-      {...(isEditMode ? attributes : {})}
-      {...(isEditMode ? listeners : {})}
-      onClick={handleWrapperClick}
-    >
-      {/* --- Внешние Drop-зоны (теперь абсолютно позиционированы) --- */}
-      {isEditMode && (
-        <>
-          {parentDirection === 'column' ? (
-            <>
-              <div ref={dropTop} className={`${styles.dropZone} ${styles.dropZoneTop} ${overTop ? styles.dropZoneOver : ''}`} />
-              <div ref={dropBottom} className={`${styles.dropZone} ${styles.dropZoneBottom} ${overBottom ? styles.dropZoneOver : ''}`} />
-            </>
-          ) : (
-            <>
-              <div ref={dropLeft} className={`${styles.dropZone} ${styles.dropZoneLeft} ${overLeft ? styles.dropZoneOver : ''}`} />
-              <div ref={dropRight} className={`${styles.dropZone} ${styles.dropZoneRight} ${overRight ? styles.dropZoneOver : ''}`} />
-            </>
-          )}
-        </>
+    <>
+      {isEditMode && isSelected && (
+        <BlockToolbar targetRef={blockRef} selectedBlock={block} dragHandleListeners={listeners}>{getToolbarContent()}</BlockToolbar>
       )}
+      <div className={styles.shellWrapper}>
+        {isEditMode && isDragging && activeId !== block.id && (
+          <>
+            {isFirst && <div ref={dropTop} className={`${styles.dropZone} ${styles.dropZoneTop} ${overTop ? styles.dropZoneOver : ''}`} />}
+            <div ref={dropBottom} className={`${styles.dropZone} ${styles.dropZoneBottom} ${overBottom ? styles.dropZoneOver : ''}`} />
+          </>
+        )}
+        <ComponentToRender
+          ref={mergeRefs}
+          block={block}
+          mode={mode}
+          className={wrapperClasses}
+          actions={actions}
+          isOver={isOverInner}
+          isEditingText={isEditingText}
+          dropRef={dropInner}
+          onClick={handleWrapperClick}
+          onDoubleClick={handleDoubleClick}
+          onFocusOut={handleFocusOut}
+          {...attributes}
+          {...listeners}
+        >
+          {renderedChildren}
+        </ComponentToRender>
+      </div>
+    </>
 
-      {/* --- Тулбар и кнопка удаления --- */}
-      {isEditMode && selectedBlockId === block.id && (
-        <>
-          <BlockToolbar targetRef={blockRef}>{getToolbarContent()}</BlockToolbar>
-          <button className={styles.deleteButton} onClick={(e) => { e.stopPropagation(); actions.delete(block.id); }}>X</button>
-        </>
-      )}
-
-      <ComponentToRender
-        ref={blockRef}
-        block={block}
-        actions={actions}
-        mode={mode}
-        dropRef={isEditMode && block.type === BLOCK_TYPES.CONTAINER ? dropInner : null}
-        isOver={isEditMode && block.type === BLOCK_TYPES.CONTAINER ? isOverInner : false}
-      >
-        {renderedChildren}
-      </ComponentToRender>
-    </div>
   );
 };
 

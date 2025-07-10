@@ -1,5 +1,6 @@
-/* src/components/sidebar/SidebarElements.module.css */
 .sidebarElements {
-  /* Если нужны стили для самого контейнера сайдбара, добавь их сюда. */
-  /* Например: display: flex; flex-direction: column; */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(65px, 1fr));
+  gap: 10px;
+  padding: 10px;
 }

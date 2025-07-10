@@ -1,11 +1,33 @@
 .button {
-  box-sizing: border-box; 
+  box-sizing: border-box;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  border: 2px solid transparent;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
 }
-
 .button:hover {
   filter: brightness(110%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
+
+/* --- Варианты стиля --- */
+.variant-style-primary {
+  background-color: #007bff;
+  color: #ffffff;
+}
+.variant-style-outline {
+  background-color: transparent;
+  color: #007bff;
+  border-color: #007bff;
+}
+
+/* --- Варианты размера --- */
+.variant-size-small { font-size: 12px; padding: 6px 12px; border-radius: 4px;}
+.variant-size-medium { font-size: 16px; padding: 10px 20px; border-radius: 6px;}
+.variant-size-large { font-size: 20px; padding: 14px 28px; border-radius: 8px;}
+
+/* --- Варианты ширины --- */
+.variant-width-auto { width: auto; }
+.variant-width-full { width: 100%; display: block; }

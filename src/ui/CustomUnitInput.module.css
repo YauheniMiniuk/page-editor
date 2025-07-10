@@ -1,0 +1,10 @@
+.customInputWrapper {
+  display: flex;
+  gap: 4px;
+}
+
+/* Опционально, чтобы селект был поуже */
+.customInputWrapper > *:last-child {
+  flex-basis: 70px;
+  flex-shrink: 0;
+}

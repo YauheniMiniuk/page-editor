@@ -1,16 +1,15 @@
-// src/components/common/DragOverlayContent.jsx
 import React from 'react';
 import styles from './DragOverlayContent.module.css';
-import { BLOCK_TYPES } from '../../utils/constants'; // Добавим импорт BLOCK_TYPES
+import { BLOCK_COMPONENTS } from '../../utils/constants'; // Импортируем наш конфиг блоков
 
 const DragOverlayContent = ({ block }) => {
+  // Находим информацию о блоке (иконку, лейбл) по его типу
+  const blockInfo = BLOCK_COMPONENTS[block?.blockInfo?.type]?.blockInfo || { icon: '❓', label: block?.blockInfo?.type };
+
   return (
-    <div className={styles.dragOverlayItem}>
-      {block.type === BLOCK_TYPES.TEXT ? (
-        <span>{block.content || 'Текст'}</span>
-      ) : (
-        <span>{block.type}</span>
-      )}
+    <div className={styles.dragOverlay}>
+      <span className={styles.icon}>{blockInfo.icon}</span>
+      <span className={styles.label}>{blockInfo.label}</span>
     </div>
   );
 };

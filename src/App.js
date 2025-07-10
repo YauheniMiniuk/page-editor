@@ -21,13 +21,13 @@ export default function App() {
               <PagesDashboard />
             }
             />
-            <Route path='/editor/:slug' element={
-              <DndCanvasBuilder mode={EDITOR_MODS.EDIT} />
-            }
+            <Route
+              path='/editor/:slug'
+              element={<DndCanvasBuilder initialMode="edit" />}
             />
-            <Route path='/page/:slug' element={
-              <DndCanvasBuilder mode={EDITOR_MODS.VIEW} />
-            }
+            <Route
+              path='/page/:slug'
+              element={<DndCanvasBuilder initialMode="view" />}
             />
           </Routes>
         </BrowserRouter>

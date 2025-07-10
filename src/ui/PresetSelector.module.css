@@ -1,0 +1,6 @@
+.presetGroup {
+  display: flex;
+  background-color: var(--bg-hover); /* Легкий фон для группы */
+  border-radius: var(--border-radius-md);
+  padding: 4px;
+}

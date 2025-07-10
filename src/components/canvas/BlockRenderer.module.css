@@ -1,19 +1,26 @@
-/* НОВАЯ техническая обертка. Никаких визуальных стилей! */
 .blockWrapper {
-  position: relative; /* Обязательно для D&D UI */
-  /* Убираем отсюда padding, margin, background, border и т.д. */
+  width: 100%;
+}
+
+.shellWrapper {
+  /* 1. Контекст для позиционирования дроп-зон */
+  position: relative;
+  
+  /* 2. Заставляем обертку вести себя как полноценный блок в верстке */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 /* Стиль для ВЫДЕЛЕННОЙ обертки. Рамка теперь здесь. */
 .selectedWrapper {
   outline: 2px solid #3b82f6;
-  outline-offset: 2px; /* Рамка снаружи, чтобы не влиять на внутренний контент */
-  z-index: 2; /* Выделенный блок поверх других */
+  outline-offset: -2px;
 }
 
 /* Стиль для перетаскиваемого "призрака" */
 .dragging {
-    opacity: 0.5;
+  opacity: 0.5;
 }
 
 .dropZone {
@@ -32,42 +39,94 @@
 }
 
 /* Вертикальные зоны (сверху/снизу) */
-.dropZoneTop, .dropZoneBottom {
+.dropZoneTop,
+.dropZoneBottom {
   left: 0;
   right: 0;
-  height: 30px; /* Увеличили область захвата */
+  height: 30px;
+  z-index: 5;
+  /* Увеличили область захвата */
 }
-.dropZoneTop { top: -15px; } /* Смещаем на половину высоты */
-.dropZoneBottom { bottom: -15px; }
+
+.dropZoneTop {
+  top: -15px;
+}
+
+/* Смещаем на половину высоты */
+.dropZoneBottom {
+  bottom: -15px;
+}
 
 .dropZoneOver.dropZoneTop::after,
 .dropZoneOver.dropZoneBottom::after {
   height: 4px;
   left: 0;
   width: 100%;
-  top: 13px; /* Центрируем линию ( (30px - 4px) / 2 ) */
+  top: 13px;
+  /* Центрируем линию ( (30px - 4px) / 2 ) */
 }
 
 /* Горизонтальные зоны (слева/справа) */
-.dropZoneLeft, .dropZoneRight {
+.dropZoneLeft,
+.dropZoneRight {
   top: 0;
   bottom: 0;
-  width: 30px; /* Увеличили область захвата */
+  width: 30px;
+  z-index: 5;
+  /* Увеличили область захвата */
 }
-.dropZoneLeft { left: -15px; } /* Смещаем на половину ширины */
-.dropZoneRight { right: -15px; }
+
+.dropZoneLeft {
+  left: -15px;
+}
+
+/* Смещаем на половину ширины */
+.dropZoneRight {
+  right: -15px;
+}
 
 .dropZoneOver.dropZoneLeft::after,
 .dropZoneOver.dropZoneRight::after {
   width: 4px;
   top: 0;
   height: 100%;
-  left: 13px; /* Центрируем линию ( (30px - 4px) / 2 ) */
+  left: 13px;
+  /* Центрируем линию ( (30px - 4px) / 2 ) */
 }
+
 .deleteButton {
-  position: absolute; top: -10px; right: -10px; width: 20px; height: 20px;
-  border-radius: 50%; background-color: red; color: white;
-  border: none; cursor: pointer; display: flex;
-  align-items: center; justify-content: center;
-  font-size: 12px; z-index: 10;
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: red;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  z-index: 100;
+}
+
+
+.blockWrapper {
+  position: relative;
+}
+
+.overlay {
+    opacity: 0.95;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    cursor: grabbing;
+}
+
+.previewPlaceholder {
+  background-color: rgba(59, 130, 246, 0.1);
+  outline: 1px dashed rgba(59, 130, 246, 0.5);
+  border-radius: 8px;
+  box-sizing: border-box;
+  width: 100%;
 }

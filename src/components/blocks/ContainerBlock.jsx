@@ -1,192 +1,266 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
+import { motion } from 'framer-motion';
 import styles from './ContainerBlock.module.css';
+
 // Импортируем наши UI-компоненты
 import Tabs from '../../ui/Tabs';
 import Tab from '../../ui/Tab';
-import Input from '../../ui/Input';
 import Select from '../../ui/Select';
 import ColorPicker from '../../ui/ColorPicker';
+import ToolbarButton from '../../ui/ToolbarButton';
+import CustomUnitInput from '../../ui/CustomUnitInput';
+import PresetSelector from '../../ui/PresetSelector'; // FIX 3: Импортируем PresetSelector
 
-const ContainerBlock = ({ block, children, mode, isOver, dropRef }, ref) => {
-  const { props = {}, styles: blockStyles = {} } = block;
-  const Tag = props.as || 'div';
-  const isEditMode = mode === 'edit';
-  const hasChildren = React.Children.count(children) > 0;
+// Импортируем иконки
+import {
+  ContainerIcon, ContentWidthIcon, FullWidthIcon, LayoutColumnIcon, LayoutRowIcon, WideWidthIcon,
+  AlignItemsStartIcon, AlignItemsCenterIcon, AlignItemsEndIcon, AlignItemsStretchIcon
+} from '../../utils/icons';
+import { withBlockFeatures } from '../../hocs/withBlockFeatures';
+import { withContainer } from '../../hocs/withContainer';
 
-  const setRefs = (node) => {
-    if (typeof ref === 'function') ref(node);
-    else if (ref) ref.current = node;
+const ContainerBlock = forwardRef(({ block, children, mode, className, ...restProps }, ref) => {
+    const { props = {}, styles: blockStyles = {} } = block;
+    const Tag = props.as || 'div';
 
-    if (typeof dropRef === 'function') dropRef(node);
-    else if (dropRef) dropRef.current = node;
-  };
+    const inlineStyles = {
+        ...blockStyles,
+        display: 'flex',
+        flexDirection: block.variants?.direction || 'column',
+        justifyContent: block.variants?.justifyContent || 'flex-start',
+        alignItems: block.variants?.alignItems || 'stretch',
+        minHeight: '80px', // Важно оставить минимальную высоту для пустого контейнера
+    };
 
-  const containerClasses = [
-    styles.container,
-    isEditMode && !hasChildren ? styles.isEmpty : '',
-    isEditMode && isOver ? styles.isOver : '',
-  ].filter(Boolean).join(' ');
+    const finalClasses = [
+        styles.container,
+        className,
+    ].filter(Boolean).join(' ');
 
-  const { flexDirection, ...restBlockStyles } = blockStyles;
+    const MotionTag = motion[Tag] || motion.div;
 
-  const containerStyles = {
-    display: 'flex',
-    flexDirection: props.direction || 'column',
-    ...restBlockStyles,
-  };
-
-  return (
-    <Tag ref={setRefs} className={containerClasses} style={containerStyles}>
-      {children}
-      {isEditMode && !hasChildren && (
-        <div className={styles.emptyPlaceholder}>
-          Перетащите блок сюда
-        </div>
-      )}
-    </Tag>
-  );
-};
+    // --- ЛОГИКА УПРОСТИЛАСЬ ---
+    // Больше нет проверки на hasChildren и isEditMode.
+    // Просто рендерим компонент и его детей. HOC сделает остальное.
+    return (
+        <MotionTag ref={ref} className={finalClasses} style={inlineStyles} {...restProps}>
+            {children}
+        </MotionTag>
+    );
+});
 
 ContainerBlock.blockInfo = {
-  type: 'CONTAINER',
+  type: 'core/container',
   label: 'Контейнер',
+  icon: <ContainerIcon />,
+  isContainer: true,
+
   defaultData: {
-    type: 'CONTAINER',
+    type: 'core/container',
     children: [],
-    props: { as: 'section' },
-    styles: {
-      display: 'flex',
-      flexDirection: 'row',
-      padding: '10px',
-      gap: '16px',
+    variants: {
+      align: 'none',
+      direction: 'column',
+      justifyContent: 'flex-start',
+      alignItems: 'stretch',
     },
+    props: { as: 'div' },
+    styles: {},
+  },
+
+  supportedVariants: {
+    align: {
+      label: 'Ширина блока', // Более понятный лейбл
+      options: [
+        // FIX 3: Заменяем текстовые иконки на реальные компоненты
+        { value: 'none', label: 'Контент', icon: <ContentWidthIcon /> },
+        { value: 'wide', label: 'Широкая', icon: <WideWidthIcon /> },
+        { value: 'full', label: 'Во всю ширину', icon: <FullWidthIcon /> },
+      ],
+    },
+    direction: {
+      label: 'Направление',
+      options: [
+        { value: 'column', label: 'Колонка', icon: <LayoutColumnIcon /> },
+        { value: 'row', label: 'Ряд', icon: <LayoutRowIcon /> },
+      ],
+    },
+    justifyContent: {
+      label: 'Выравнивание по основной оси',
+      options: [
+        { value: 'flex-start', label: 'Начало' },
+        { value: 'center', label: 'Центр' },
+        { value: 'flex-end', label: 'Конец' },
+        { value: 'space-between', label: 'Между' },
+      ]
+    },
+    alignItems: {
+      label: 'Выравнивание по поперечной оси',
+      options: [
+        { value: 'stretch', label: 'Растянуть', icon: <AlignItemsStretchIcon /> },
+        { value: 'flex-start', label: 'Начало', icon: <AlignItemsStartIcon /> },
+        { value: 'center', label: 'Центр', icon: <AlignItemsCenterIcon /> },
+        { value: 'flex-end', label: 'Конец', icon: <AlignItemsEndIcon /> },
+      ]
+    }
+  },
+
+  getToolbarItems: ({ block, actions }) => {
+    const { variants = {} } = block;
+    const currentAlign = block.variants?.align || 'none';
+    const currentDirection = variants.direction || 'column';
+
+    // Функция-помощник для обновления варианта
+    const updateVariant = (variantName, newValue) => {
+      actions.update(block.id, {
+        variants: { ...block.variants, [variantName]: newValue },
+      });
+    };
+
+    const nextDirection = currentDirection === 'column' ? 'row' : 'column';
+
+    return [
+      <div key="align-group" className="toolbarButtonGroup">
+        <ToolbarButton
+          title="Ширина контента"
+          onClick={() => updateVariant('align', 'none')}
+          isActive={currentAlign === 'none'}
+        >
+          <ContentWidthIcon />
+        </ToolbarButton>
+        <ToolbarButton
+          title="Широкая ширина"
+          onClick={() => updateVariant('align', 'wide')}
+          isActive={currentAlign === 'wide'}
+        >
+          <WideWidthIcon />
+        </ToolbarButton>
+        <ToolbarButton
+          title="Во всю ширину"
+          onClick={() => updateVariant('align', 'full')}
+          isActive={currentAlign === 'full'}
+        >
+          <FullWidthIcon />
+        </ToolbarButton>
+      </div>,
+
+      <div key="separator" className="toolbarSeparator"></div>,
+
+      <ToolbarButton
+        key="direction"
+        title={`Изменить на: ${nextDirection === 'row' ? 'Ряд' : 'Колонка'}`}
+        onClick={() => updateVariant('direction', nextDirection)}
+      >
+        {currentDirection === 'column' ? <LayoutRowIcon /> : <LayoutColumnIcon />}
+      </ToolbarButton>
+    ];
+  },
+
+  getEditor: ({ block, onChange }, helpers) => {
+    const { props = {}, styles = {}, variants = {} } = block;
+
+    // FIX 1: Исправляем обработчики. Они должны принимать чистое значение, а не event.
+    // Также исправлен баг, `styles` нужно брать из `block.styles`.
+    const handlePropsChange = (newProps) => onChange({ props: { ...props, ...newProps } });
+    const handleStyleChange = (newStyles) => onChange({ styles: { ...(block.styles || {}), ...newStyles } });
+    const updateVariant = (name, value) => helpers.updateVariant(name, value);
+
+    const currentDirection = variants.direction || 'column';
+
+    // FIX 2: Создаем динамические подписи для осей
+    const axisLabels = {
+      main: currentDirection === 'column' ? 'По вертикали' : 'По горизонтали',
+      cross: currentDirection === 'column' ? 'По горизонтали' : 'По вертикали',
+    };
+
+    const userPresets = [
+    '#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51',
+    '#ffffff', '#000000'
+  ];
+
+    return (
+      <Tabs>
+        <Tab title="Компоновка">
+          <h4>{ContainerBlock.blockInfo.supportedVariants.align.label}</h4>
+          {/* FIX 3: Заменяем кнопки на PresetSelector */}
+          <PresetSelector
+            options={ContainerBlock.blockInfo.supportedVariants.align.options}
+            value={variants.align || 'none'}
+            onChange={(newValue) => updateVariant('align', newValue)}
+          />
+          <hr />
+          <h4>{ContainerBlock.blockInfo.supportedVariants.direction.label}</h4>
+          {/* FIX 3: И здесь тоже */}
+          <PresetSelector
+            options={ContainerBlock.blockInfo.supportedVariants.direction.options}
+            value={currentDirection}
+            onChange={(newValue) => updateVariant('direction', newValue)}
+          />
+          <hr />
+          <h4>Выравнивание содержимого</h4>
+          {/* FIX 2: Используем динамические подписи */}
+          <Select
+            label={axisLabels.main}
+            options={ContainerBlock.blockInfo.supportedVariants.justifyContent.options}
+            value={variants.justifyContent || 'flex-start'}
+            onChange={(newValue) => updateVariant('justifyContent', newValue)}
+          />
+          <Select
+            label={axisLabels.cross}
+            options={ContainerBlock.blockInfo.supportedVariants.alignItems.options}
+            value={variants.alignItems || 'stretch'}
+            onChange={(newValue) => updateVariant('alignItems', newValue)}
+          />
+        </Tab>
+
+        <Tab title="Стили">
+          <h4>Цвета</h4>
+          {/* FIX 1: Упрощаем onChange */}
+          <ColorPicker
+            label="Цвет фона"
+            value={styles?.backgroundColor || ''}
+            onChange={(color) => handleStyleChange({ backgroundColor: color })}
+            presetColors={userPresets}
+            
+          />
+          <ColorPicker
+            label="Цвет текста"
+            value={styles?.color || ''}
+            onChange={(color) => handleStyleChange({ color: color })}
+            presetColors={userPresets}
+          />
+          <hr />
+          <h4>Отступы</h4>
+          <div>
+            <label>Промежуток (gap)</label>
+            <CustomUnitInput
+              value={styles?.gap || ''}
+              onChange={(newValue) => handleStyleChange({ gap: newValue })}
+            />
+          </div>
+          <div>
+            <label>Внутренние отступы (padding)</label>
+            <CustomUnitInput
+              value={styles?.padding || ''}
+              onChange={(newValue) => handleStyleChange({ padding: newValue })}
+            />
+          </div>
+        </Tab>
+        <Tab title="Дополнительно">
+          <h4>HTML-тег</h4>
+          <Select
+            label="Тег"
+            value={props.as || 'div'}
+            options={[
+              { label: 'div', value: 'div' },
+              { label: 'section', value: 'section' },
+            ]}
+            onChange={(val) => handlePropsChange({ as: val })}
+          />
+        </Tab>
+      </Tabs>
+    );
   },
 };
 
-// --- Тулбар с быстрыми настройками ---
-ContainerBlock.getToolbarItems = ({ block, actions }, ref) => {
-  const currentDirection = block.props?.direction || 'column';
-  const nextDirection = currentDirection === 'column' ? 'row' : 'column';
-  const currentAlign = block.align || 'none';
-
-  return [
-    <div key="align-group" className="toolbarButtonGroup">
-      <button title="Ширина контента" onClick={() => actions.update(block.id, { align: 'none' })} className={currentAlign === 'none' ? 'active' : ''}>C</button>
-      <button title="Широкая ширина" onClick={() => actions.update(block.id, { align: 'wide' })} className={currentAlign === 'wide' ? 'active' : ''}>W</button>
-      <button title="Во всю ширину" onClick={() => actions.update(block.id, { align: 'full' })} className={currentAlign === 'full' ? 'active' : ''}>F</button>
-    </div>,
-    <div key="separator" className="toolbarSeparator"></div>,
-    <button
-      key="direction"
-      onClick={() => actions.update(block.id, { props: { ...block.props, direction: nextDirection } })}
-      title={`Направление: ${nextDirection}`}
-    >
-      {currentDirection === 'column' ? '⬇' : '➡'}
-    </button>
-  ];
-};
-
-// --- Боковая панель с детальными настройками ---
-ContainerBlock.getEditor = ({ block, onChange }) => {
-  const { props: currentProps = {}, styles: currentStyles = {} } = block;
-
-  const handleStyleChange = (newStyles) => {
-    onChange({ styles: { ...currentStyles, ...newStyles } });
-  };
-
-  const handlePropsChange = (newProps) => {
-    onChange({ props: { ...currentProps, ...newProps } });
-  };
-
-  return (
-    <Tabs>
-      <Tab title="Стили">
-        <h4>Цвет</h4>
-        <ColorPicker
-          label="Фон"
-          value={currentStyles.backgroundColor || ''}
-          onChange={(val) => handleStyleChange({ backgroundColor: val })}
-        />
-        <ColorPicker
-          label="Текст"
-          value={currentStyles.color || ''}
-          onChange={(val) => handleStyleChange({ color: val })}
-        />
-
-        <hr />
-        <h4>Размеры</h4>
-        <Input
-          label="Внутренний отступ (padding)"
-          placeholder="15px или 10px 20px"
-          value={currentStyles.padding || ''}
-          onChange={(e) => handleStyleChange({ padding: e.target.value })}
-        />
-        <Input
-          label="Внешний отступ (margin)"
-          placeholder="0 auto"
-          value={currentStyles.margin || ''}
-          onChange={(e) => handleStyleChange({ margin: e.target.value })}
-        />
-      </Tab>
-
-      <Tab title="Настройки">
-        <h4>Компоновка (Flexbox)</h4>
-        <Select
-          label="Горизонтальное выравнивание (justify-content)"
-          value={currentStyles.justifyContent || 'flex-start'}
-          options={[
-            { label: 'Начало', value: 'flex-start' }, { label: 'Центр', value: 'center' },
-            { label: 'Конец', value: 'flex-end' }, { label: 'Между', value: 'space-between' },
-            { label: 'Вокруг', value: 'space-around' },
-          ]}
-          onChange={(val) => handleStyleChange({ justifyContent: val })}
-        />
-        <Select
-          label="Вертикальное выравнивание (align-items)"
-          value={currentStyles.alignItems || 'stretch'}
-          options={[
-            { label: 'Растянуть', value: 'stretch' }, { label: 'Начало', value: 'flex-start' },
-            { label: 'Центр', value: 'center' }, { label: 'Конец', value: 'flex-end' },
-          ]}
-          onChange={(val) => handleStyleChange({ alignItems: val })}
-        />
-        <Input
-          label="Промежуток (gap)"
-          placeholder="10px"
-          value={currentStyles.gap || ''}
-          onChange={(e) => handleStyleChange({ gap: e.target.value })}
-        />
-        <label style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
-          <input
-            type="checkbox"
-            checked={currentStyles.flexWrap === 'wrap'}
-            onChange={(e) => handleStyleChange({ flexWrap: e.target.checked ? 'wrap' : 'nowrap' })}
-          />
-          <span style={{ marginLeft: '8px' }}>Переносить на несколько строк</span>
-        </label>
-
-        <hr />
-        <h4>Дополнительно</h4>
-        <Select
-          label="HTML-тег"
-          value={currentProps.as || 'div'}
-          options={[
-            { label: 'div (стандарт)', value: 'div' }, { label: 'section', value: 'section' },
-            { label: 'header', value: 'header' }, { label: 'footer', value: 'footer' },
-            { label: 'article', value: 'article' }, { label: 'aside', value: 'aside' },
-            { label: 'main', value: 'main' },
-          ]}
-          onChange={(val) => handlePropsChange({ as: val })}
-        />
-        <Select
-          label="Позиция"
-          value={currentStyles.position || 'static'}
-          options={[{ label: 'Статичная', value: 'static' }, { label: 'Липкая (sticky)', value: 'sticky' }]}
-          onChange={(val) => handleStyleChange({ position: val })}
-        />
-      </Tab>
-    </Tabs>
-  );
-};
-
-export default ContainerBlock;
+export default withBlockFeatures(withContainer(ContainerBlock, styles), styles);

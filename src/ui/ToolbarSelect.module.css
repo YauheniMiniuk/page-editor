@@ -1,0 +1,85 @@
+.wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* Кнопка, которая открывает селект */
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  font-size: 14px;
+}
+
+.trigger:hover {
+  background-color: var(--bg-toolbar-hover);
+}
+
+/* Стрелочка */
+.arrow {
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Поворот стрелки при открытом меню */
+.trigger[aria-expanded="true"] .arrow {
+  transform: rotate(180deg);
+}
+
+/* Выпадающий список */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 100%; /* Чтобы был не уже кнопки */
+  width: max-content; /* Автоматическая ширина по контенту */
+  padding: 6px;
+  background-color: var(--bg-toolbar);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-popup);
+  z-index: 1010;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Каждая опция в списке */
+.option {
+  display: flex;
+  justify-content: space-between; /* Для галочки справа */
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  text-align: left;
+  padding: 8px 10px;
+  width: 100%;
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition-fast);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.option:hover {
+  background-color: var(--bg-toolbar-hover);
+}
+
+/* Стиль для выбранной опции */
+.option.selected {
+  color: white;
+  background-color: var(--bg-toolbar-active);
+}
+
+/* Галочка для наглядности */
+.checkIcon {
+  font-size: 16px;
+  color: var(--text-primary);
+}

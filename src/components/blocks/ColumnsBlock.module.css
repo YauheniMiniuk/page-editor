@@ -1,0 +1,39 @@
+.columnsWrapper {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.column {
+    min-height: 60px;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    /* Колонки по умолчанию занимают равное пространство */
+}
+
+/* Стили для пустых зон, как в ContainerBlock */
+.isEmpty {
+    border: 2px dashed #d1d5db;
+}
+
+.isOverInner {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    box-shadow: inset 0 0 0 2px #3b82f6 !important;
+}
+
+.emptyDropZone {
+    width: 100%;
+    padding: 40px 20px;
+    border-radius: 8px;
+    text-align: center;
+    color: #9ca3af;
+    transition: all 0.2s;
+}
+
+.emptyDropZone.isOver {
+    border-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+}
