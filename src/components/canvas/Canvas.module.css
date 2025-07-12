@@ -1,13 +1,17 @@
 /* src/components/canvas/Canvas.module.css */
 .canvasContainer {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto; /* это уже есть — ок */
   position: relative;
   background-color: #e9ebee;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 .canvas {
   min-height: 100%;
+  width: 100%;
   background-color: white;
   border-radius: 4px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);

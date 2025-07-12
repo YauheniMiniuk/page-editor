@@ -1,0 +1,47 @@
+.galleryWrapper {
+    display: grid;
+    /* Используем переменные, которые задаем в инлайн-стилях */
+    grid-template-columns: repeat(var(--gallery-columns, 3), 1fr);
+    gap: var(--gallery-gap, 1rem);
+    margin: 1.5em 0;
+}
+
+.galleryItem {
+    position: relative;
+    aspect-ratio: 1 / 1; /* Делаем изображения квадратными по умолчанию */
+    background-color: #f3f4f6;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 0;
+}
+
+.galleryItem img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Изображение будет заполнять контейнер, обрезая лишнее */
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.galleryItem:hover img {
+    transform: scale(1.05);
+}
+
+/* Оверлей с кнопкой удаления в режиме редактирования */
+.itemOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.galleryItem:hover .itemOverlay {
+    opacity: 1;
+}

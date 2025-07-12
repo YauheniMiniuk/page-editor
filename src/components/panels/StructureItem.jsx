@@ -19,7 +19,7 @@ const StructureItem = ({
     const { id, type, children } = block;
     const isExpanded = !!expandedIds[block.id];
     const hasChildren = children?.length > 0;
-    const canHaveChildren = block.type === 'core/container';
+    const canHaveChildren = !!BLOCK_COMPONENTS[type]?.blockInfo?.isContainer;
 
     const overId = overDropZone?.id;
     const isDropTargetBefore = overId === `structure-${id}-top`;

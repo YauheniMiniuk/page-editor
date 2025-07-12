@@ -37,12 +37,17 @@
   --transition-fast: all 0.15s ease;
 }
 
-/* Основной контент (холст + правые панели) */
+.builderLayout {
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
 .mainContent {
-  flex: 1;
   display: flex;
   flex-direction: row;
-  overflow: hidden; /* Важно, чтобы панели не вылезали */
+  overflow: hidden;
+  flex: 1; /* это важно */
 }
 
 /* Обертка для правой колонки панелей */

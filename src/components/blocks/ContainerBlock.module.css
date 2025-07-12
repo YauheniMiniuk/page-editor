@@ -111,3 +111,11 @@
 .variant-alignItems-stretch {
   align-items: stretch;
 }
+
+@media (max-width: 768px) {
+    /* Если у блока есть класс .variant-allowWrap-true... */
+    .variant-allowWrap-true {
+        /* ... разрешаем перенос элементов */
+        flex-wrap: wrap;
+    }
+}

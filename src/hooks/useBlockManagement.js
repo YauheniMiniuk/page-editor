@@ -4,7 +4,13 @@ import {
   updateBlockRecursive,
   insertBlockRecursive,
   findBlockAndParent,
-  swapBlocksRecursive
+  swapBlocksRecursive,
+  addListItem,
+  indentListItem,
+  removeListItem,
+  outdentListItem,
+  transformBlock,
+  updateListItemContent
 } from '../utils/blockUtils';
 
 const useBlockManagement = (initialBlocks = []) => {
@@ -13,6 +19,8 @@ const useBlockManagement = (initialBlocks = []) => {
   const [activeId, setActiveId] = useState(null);
   const [activeDragItem, setActiveDragItem] = useState(null);
   const [overDropZone, setOverDropZone] = useState(null);
+  const [focusRequest, setFocusRequest] = useState(null);
+  const [isInlineEditing, setIsInlineEditing] = useState(false);
 
   // Все эти функции остаются без изменений.
   const handleDeleteBlock = useCallback((id) => {
@@ -49,6 +57,47 @@ const useBlockManagement = (initialBlocks = []) => {
     setBlocks(prev => swapBlocksRecursive(prev, blockId, direction));
   }, []);
 
+  const handleAddListItem = useCallback((currentItemId) => {
+    const { newBlocks, newItemId } = addListItem(blocks, currentItemId);
+    setBlocks(newBlocks);
+    console.log(`🚀 ЗАПРОС ФОКУСА: Создан для нового элемента ${newItemId}`);
+    setFocusRequest({ targetId: newItemId, position: 'start' });
+  }, [blocks]);
+
+  const handleRemoveListItem = useCallback((currentItemId) => {
+    const { newBlocks, prevItemId } = removeListItem(blocks, currentItemId);
+    setBlocks(newBlocks);
+    if (prevItemId) {
+      console.log(`🚀 ЗАПРОС ФОКУСА: Создан для предыдущего элемента ${prevItemId}`);
+      setFocusRequest({ targetId: prevItemId, position: 'end' });
+    }
+  }, [blocks]);
+
+  const handleIndentListItem = useCallback((currentItemId) => {
+    setBlocks(prev => indentListItem(prev, currentItemId));
+    console.log(`🚀 ЗАПРОС ФОКУСА: Создан для элемента ${currentItemId} после отступа`);
+    setFocusRequest({ targetId: currentItemId, position: 'start' });
+  }, []);
+
+  const handleOutdentListItem = useCallback((currentItemId) => {
+    setBlocks(prev => outdentListItem(prev, currentItemId));
+    console.log(`🚀 ЗАПРОС ФОКУСА: Создан для элемента ${currentItemId} после отступа`);
+    setFocusRequest({ targetId: currentItemId, position: 'start' });
+  }, []);
+
+  const handleUpdateListItemContent = useCallback((itemId, newContent) => {
+    setBlocks(prev => updateListItemContent(prev, itemId, newContent));
+  }, []);
+
+  const handleTransformBlock = useCallback((blockId, newType) => {
+    setBlocks(prev => transformBlock(prev, blockId, newType));
+  }, []);
+
+  const handleSetIsInlineEditing = useCallback((isEditing) => {
+        console.log(`✍️ Режим inline-редактирования: ${isEditing ? 'ВКЛЮЧЕН' : 'ВЫКЛЮЧЕН'}`);
+        setIsInlineEditing(isEditing);
+    }, []);
+
   const actions = useMemo(() => ({
     update: handleUpdateBlock,
     delete: handleDeleteBlock,
@@ -59,10 +108,35 @@ const useBlockManagement = (initialBlocks = []) => {
     setBlocks: setBlocks,
     setActiveId: setActiveId,
     swapBlock,
+    addListItem: handleAddListItem,
+    indentListItem: handleIndentListItem,
+    removeListItem: handleRemoveListItem,
+    outdentListItem: handleOutdentListItem,
+    updateListItemContent: handleUpdateListItemContent,
+    transformBlock: handleTransformBlock,
+    clearFocusRequest: () => {
+      console.log("🔄 Сброс запроса на фокус");
+      setFocusRequest(null)
+    },
+    setInlineEditing: handleSetIsInlineEditing,
+
   }), [
-    handleUpdateBlock, handleDeleteBlock, handleAddBlock,
-    setSelectedBlockId, handleSelectParent, handleSelectSibling,
-    setBlocks, setActiveId, swapBlock
+    handleUpdateBlock,
+    handleDeleteBlock,
+    handleAddBlock,
+    setSelectedBlockId,
+    handleSelectParent,
+    handleSelectSibling,
+    setBlocks,
+    setActiveId,
+    swapBlock,
+    handleAddListItem,
+    handleIndentListItem,
+    handleRemoveListItem,
+    handleOutdentListItem,
+    handleTransformBlock,
+    handleUpdateListItemContent,
+    handleTransformBlock,
   ]);
 
   return {
@@ -73,6 +147,8 @@ const useBlockManagement = (initialBlocks = []) => {
     setActiveDragItem,
     overDropZone,
     setOverDropZone,
+    focusRequest,
+    isInlineEditing,
     actions,
   };
 };

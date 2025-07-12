@@ -1,4 +1,5 @@
-import { BLOCK_TYPES } from "./constants";
+import { nanoid } from "nanoid";
+import { BLOCK_COMPONENTS, BLOCK_TYPES } from "./constants";
 
 export const isAncestor = (blocks, potentialAncestorId, childId) => {
   const childInfo = findBlockAndParent(blocks, childId);
@@ -21,16 +22,74 @@ export const findBlockAndParent = (blocks, id, parent = null) => {
   return null;
 };
 
-const insertIntoArray = (arr, item, index) => {
-  const newArr = [...arr];
-  if (index < 0) {
-    newArr.unshift(item);
-  } else if (index >= newArr.length) {
-    newArr.push(item);
-  } else {
-    newArr.splice(index, 0, item);
+function findListItemPathRecursive(items, targetId, path = []) {
+  for (const item of items) {
+    const currentPath = [...path, item];
+    if (item.id === targetId) return currentPath;
+
+    const nestedList = item.children?.find(c => c.type === 'core/list');
+    if (nestedList) {
+      const foundPath = findListItemPathRecursive(nestedList.children, targetId, currentPath);
+      if (foundPath) return foundPath;
+    }
   }
-  return newArr;
+  return null;
+}
+
+/**
+ * Рекурсивно находит в любом дереве блоков элемент и его родительский массив.
+ * @param {Array} blocks - Массив для поиска.
+ * @param {string} targetId - ID искомого элемента.
+ * @returns {{item: object, parentArray: Array}|null}
+ */
+const findItemAndParentArrayRecursive = (blocks, targetId) => {
+  for (const block of blocks) {
+    if (block.id === targetId) {
+      return { item: block, parentArray: blocks };
+    }
+    if (block.children?.length) {
+      const found = findItemAndParentArrayRecursive(block.children, targetId);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+/**
+ * Находит путь к элементу списка в виде массива объектов-предков.
+ */
+function findBlockPath(blocks, targetId, path = []) {
+  for (const block of blocks) {
+    const currentPath = [...path, block];
+    if (block.id === targetId) {
+      return currentPath;
+    }
+    if (block.children?.length) {
+      const foundPath = findBlockPath(block.children, targetId, currentPath);
+      if (foundPath) return foundPath;
+    }
+  }
+  return null;
+}
+
+const rebuildTree = (items, path, updateFn) => {
+  if (!path || path.length === 0) return items;
+
+  const [currentItem, ...restOfPath] = path;
+
+  return items.map(item => {
+    if (item.id !== currentItem.id) return item;
+
+    if (restOfPath.length === 0) {
+      // Мы достигли цели, применяем функцию
+      return updateFn(item);
+    }
+
+    return {
+      ...item,
+      children: rebuildTree(item.children || [], restOfPath, updateFn)
+    };
+  });
 };
 
 export const insertBlockRecursive = (currentBlocks, targetId, blockToInsert, position) => {
@@ -155,4 +214,167 @@ export const swapBlocksRecursive = (blocks, blockId, direction) => {
   } else {
     return siblings;
   }
+};
+
+const updateListItemRecursive = (items, targetId, updateFn) => {
+  let found = false;
+  const newItems = [];
+
+  for (let i = 0; i < items.length; i++) {
+    let item = { ...items[i] };
+    if (item.id === targetId) {
+      newItems.push(...updateFn(items, i));
+      found = true;
+      // Пропускаем оставшиеся элементы, так как они уже обработаны в updateFn
+      i = items.length;
+    } else {
+      if (item.children?.length) {
+        const result = updateListItemRecursive(item.children, targetId, updateFn);
+        item.children = result.newItems;
+        found = found || result.found;
+      }
+      newItems.push(item);
+    }
+  }
+  return { newItems, found };
+};
+
+/**
+ * Добавляет новый пункт списка после указанного.
+ */
+export const addListItem = (blocks, currentItemId) => {
+  const blocksCopy = JSON.parse(JSON.stringify(blocks));
+  const itemInfo = findItemAndParentArrayRecursive(blocksCopy, currentItemId);
+  if (!itemInfo) return blocksCopy;
+
+  const { parentArray } = itemInfo;
+  const currentIndex = parentArray.findIndex(i => i.id === currentItemId);
+
+  const newItem = { id: nanoid(), type: 'core/list-item', content: '', children: [] };
+  parentArray.splice(currentIndex + 1, 0, newItem);
+
+  return { newBlocks: blocksCopy, newItemId: newItem.id };
+};
+
+/**
+ * Удаляет пункт списка. Если у пункта были вложенные дети, они поднимаются на его уровень.
+ */
+export const removeListItem = (blocks, currentItemId) => {
+  const blocksCopy = JSON.parse(JSON.stringify(blocks));
+  const itemInfo = findItemAndParentArrayRecursive(blocksCopy, currentItemId);
+  if (!itemInfo) return blocksCopy;
+
+  const { item: itemToRemove, parentArray } = itemInfo;
+  const itemIndex = parentArray.findIndex(i => i.id === currentItemId);
+
+  const prevItemId = itemIndex > 0 ? parentArray[itemIndex - 1].id : null;
+
+  const nestedList = itemToRemove.children?.find(c => c.type === 'core/list');
+  const itemsToHoist = nestedList?.children || [];
+  parentArray.splice(itemIndex, 1, ...itemsToHoist);
+
+  // Если после удаления родительский список опустел, его тоже надо бы удалить,
+  // но это усложнит код. Оставим пока так для стабильности.
+
+  return { newBlocks: blocksCopy, prevItemId };
+};
+
+export const indentListItem = (blocks, currentItemId) => {
+  const blocksCopy = JSON.parse(JSON.stringify(blocks));
+  const itemInfo = findItemAndParentArrayRecursive(blocksCopy, currentItemId);
+  if (!itemInfo) return blocksCopy;
+
+  const { parentArray } = itemInfo;
+  const currentIndex = parentArray.findIndex(i => i.id === currentItemId);
+  if (currentIndex === 0) return blocksCopy;
+
+  const itemToMove = parentArray.splice(currentIndex, 1)[0];
+  const newParentItem = parentArray[currentIndex - 1];
+
+  if (!newParentItem.children) newParentItem.children = [];
+
+  let nestedList = newParentItem.children.find(c => c.type === 'core/list');
+  if (!nestedList) {
+    nestedList = {
+      id: nanoid(), type: 'core/list', props: { ordered: false }, children: [],
+    };
+    newParentItem.children.push(nestedList);
+  }
+  nestedList.children.push(itemToMove);
+
+  return blocksCopy;
+};
+
+/**
+ * Уменьшает вложенность пункта списка (Shift + Tab).
+ */
+export const outdentListItem = (blocks, currentItemId) => {
+  const blocksCopy = JSON.parse(JSON.stringify(blocks));
+
+  // 1. Используем новую, универсальную функцию поиска
+  const path = findBlockPath(blocksCopy, currentItemId);
+
+  // 2. Проверяем, что элемент найден и он достаточно глубоко вложен
+  if (!path || path.length < 4) {
+    // Путь для вложенного элемента: [List, ListItem, NestedList, NestedListItem] (длина 4)
+    return blocksCopy;
+  }
+
+  // 3. Определяем наших "игроков" по найденному пути
+  const itemToMove = { ...path[path.length - 1] };
+  const parentListBlock = path[path.length - 2];
+  const grandParentItem = path[path.length - 3];
+
+  // 4. Находим родительский массив для grandParentItem
+  const grandParentInfo = findItemAndParentArrayRecursive(blocksCopy, grandParentItem.id);
+  if (!grandParentInfo) return blocksCopy;
+  const { parentArray: grandParentContainerArray } = grandParentInfo;
+
+  // 5. Удаляем элемент из его старого списка
+  const itemIndexInParent = parentListBlock.children.findIndex(i => i.id === currentItemId);
+  // Забираем все элементы, которые шли после нашего (для переноса)
+  const remainingItemsInOldList = parentListBlock.children.slice(itemIndexInParent + 1);
+  parentListBlock.children.splice(itemIndexInParent);
+
+  // 6. Находим индекс "дедушки"
+  const grandParentIndex = grandParentContainerArray.findIndex(i => i.id === grandParentItem.id);
+
+  // 7. Вставляем наш элемент после "дедушки"
+  grandParentContainerArray.splice(grandParentIndex + 1, 0, itemToMove);
+
+  // 8. Переносим "младших братьев" в новый вложенный список
+  if (remainingItemsInOldList.length > 0) {
+    if (!itemToMove.children) itemToMove.children = [];
+    const newNestedList = { id: nanoid(), type: 'core/list', props: parentListBlock.props, children: remainingItemsInOldList };
+    itemToMove.children.push(newNestedList);
+  }
+
+  // 9. Очищаем пустой родительский список
+  if (parentListBlock.children.length === 0) {
+    grandParentItem.children = grandParentItem.children.filter(c => c.id !== parentListBlock.id);
+  }
+
+  return blocksCopy;
+};
+
+/**
+ * Обновляет контент конкретного пункта списка.
+ */
+export const updateListItemContent = (blocks, itemId, newContent) => {
+  const blocksCopy = JSON.parse(JSON.stringify(blocks));
+  const itemInfo = findItemAndParentArrayRecursive(blocksCopy, itemId);
+  if (!itemInfo) return blocksCopy;
+  itemInfo.item.content = newContent;
+  return blocksCopy;
+};
+
+export const transformBlock = (blocks, blockId, newType) => {
+  const { blockInfo } = BLOCK_COMPONENTS[newType] || {};
+  if (!blockInfo) return blocks;
+
+  const newBlock = { id: blockId, ...blockInfo.defaultData };
+
+  return blocks.map(b => b.id === blockId ? newBlock : b);
+  // Примечание: это очень простая трансформация, она не сохраняет контент.
+  // Для более сложных случаев понадобится логика из `blockInfo.transforms`.
 };

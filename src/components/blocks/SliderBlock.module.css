@@ -1,0 +1,54 @@
+/* Важно: эти стили должны применяться глобально к элементам Swiper,
+   поэтому мы используем :global(...) */
+
+.sliderWrapper :global(.swiper) {
+    --swiper-navigation-color: #fff;
+    --swiper-pagination-color: #fff;
+    --swiper-navigation-size: 30px; /* Уменьшаем стрелки */
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.sliderWrapper :global(.swiper-button-prev),
+.sliderWrapper :global(.swiper-button-next) {
+    background-color: rgba(0, 0, 0, 0.3);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+.sliderWrapper :global(.swiper-button-prev:hover),
+.sliderWrapper :global(.swiper-button-next:hover) {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.slide {
+    background-color: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    position: relative;
+}
+
+.slideOverlay {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+}
+
+.variant-align-none {
+    max-width: 620px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.variant-align-wide {
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.variant-align-full {
+    max-width: none;
+    width: 100%;
+}

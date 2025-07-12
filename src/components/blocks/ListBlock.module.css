@@ -1,0 +1,84 @@
+.list {
+    padding-left: 2em;
+    margin: 1em 0;
+}
+.list .list {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.listItem {
+    /* display: flex; */
+    padding-left: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.listItemContent {
+    display: inline-block;
+    width: 100%;
+}
+
+.listItemContent:focus {
+    outline: none;
+    border: none;
+    background-color: rgba(59, 130, 246, 0.05);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    border-radius: 4px;
+}
+
+/* =============================================== */
+/* === НОВЫЕ СТИЛИ ДЛЯ ВЛОЖЕННЫХ ЭЛЕМЕНТОВ === */
+/* =============================================== */
+
+/* --- Общее правило для отсутствия маркера --- */
+.variant-listStyleType-none,
+.variant-listStyleType-none .list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+/* --- Стиль: Точка (disc) --- */
+.variant-listStyleType-disc { list-style-type: disc; }
+.variant-listStyleType-disc .list { list-style-type: circle; }
+.variant-listStyleType-disc .list .list { list-style-type: square; }
+
+/* --- Стиль: Кружок (circle) --- */
+.variant-listStyleType-circle { list-style-type: circle; }
+.variant-listStyleType-circle .list { list-style-type: square; }
+.variant-listStyleType-circle .list .list { list-style-type: disc; }
+
+/* --- Стиль: Квадрат (square) --- */
+.variant-listStyleType-square { list-style-type: square; }
+.variant-listStyleType-square .list { list-style-type: disc; }
+.variant-listStyleType-square .list .list { list-style-type: circle; }
+
+/* --- Стиль: Тире (dash) - кастомный --- */
+.variant-listStyleType-dash,
+.variant-listStyleType-dash .list,
+.variant-listStyleType-dash .list .list {
+    list-style-type: none;
+}
+.variant-listStyleType-dash > .listItem { position: relative; padding-left: 1.2em; }
+.variant-listStyleType-dash > .listItem::before { content: '–'; position: absolute; left: 0; } /* en-dash */
+
+.variant-listStyleType-dash .list > .listItem { position: relative; padding-left: 1.2em; }
+.variant-listStyleType-dash .list > .listItem::before { content: '—'; position: absolute; left: 0; } /* em-dash */
+
+.variant-listStyleType-dash .list .list > .listItem { position: relative; padding-left: 1.2em; }
+.variant-listStyleType-dash .list .list > .listItem::before { content: '•'; position: absolute; left: 0; } /* bullet */
+
+
+/* --- Стиль: Цифры (decimal) --- */
+.variant-listStyleType-decimal { list-style-type: decimal; }
+.variant-listStyleType-decimal .list { list-style-type: lower-alpha; }
+.variant-listStyleType-decimal .list .list { list-style-type: lower-roman; }
+
+/* --- Стиль: Буквы (lower-alpha) --- */
+.variant-listStyleType-lower-alpha { list-style-type: lower-alpha; }
+.variant-listStyleType-lower-alpha .list { list-style-type: lower-roman; }
+.variant-listStyleType-lower-alpha .list .list { list-style-type: decimal; }
+
+/* --- Стиль: Римские (lower-roman) --- */
+.variant-listStyleType-lower-roman { list-style-type: lower-roman; }
+.variant-listStyleType-lower-roman .list { list-style-type: lower-alpha; }
+.variant-listStyleType-lower-roman .list .list { list-style-type: decimal; }

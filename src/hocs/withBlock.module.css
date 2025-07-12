@@ -1,0 +1,118 @@
+/* Основная обертка для позиционирования дроп-зон */
+.blockWrapper {
+    position: relative;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+/* Стиль для выделенного блока */
+.selected {
+    outline: 2px solid #007cba;
+    outline-offset: -2px;
+    border-radius: 2px;
+}
+
+/* --- Стили для Дроп-Зон --- */
+
+/* Базовый стиль для всех дроп-зон */
+.dropZone {
+  position: absolute;
+  background: rgba(0, 124, 186, 0.5);
+  border-radius: 2px;
+  z-index: 10;
+  /* Изначально они полностью прозрачны и не кликабельны */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.dropZone.visible {
+  opacity: 1;
+  pointer-events: auto; /* Делаем их "улавливаемыми" для dnd-kit */
+}
+
+/* Состояние, когда над дроп-зоной находится перетаскиваемый элемент */
+.dropZone.isOver {
+  background: #007cba; /* Делаем ярче */
+  /* Можно добавить и другие эффекты, например, увеличить высоту/ширину */
+}
+
+.dropZoneOver::after {
+  content: '';
+  position: absolute;
+  background-color: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.9);
+  border-radius: 2px;
+}
+.dropZoneOver::after,
+.dropZoneOver::after {
+  height: 4px;
+  left: 0;
+  width: 100%;
+  top: 13px;
+  /* Центрируем линию ( (30px - 4px) / 2 ) */
+}
+
+/* Состояние, когда над дроп-зоной находится перетаскиваемый элемент */
+.isOver {
+    opacity: 1;
+    background: #007cba;
+    /* Делаем ярче */
+}
+
+/* Позиционирование вертикальных дроп-зон */
+.dropZoneTop,
+.dropZoneBottom {
+    left: 0;
+    right: 0;
+    height: 4px;
+}
+
+.dropZoneTop {
+    top: -4px;
+}
+
+.dropZoneBottom {
+    bottom: -4px;
+}
+
+.dropZoneTop.isOver,
+.dropZoneBottom.isOver {
+    height: 8px;
+}
+
+.dropZoneTop.isOver {
+    top: -6px;
+}
+
+.dropZoneBottom.isOver {
+    bottom: -6px;
+}
+
+/* Позиционирование горизонтальных дроп-зон */
+.dropZoneLeft,
+.dropZoneRight {
+    top: 0;
+    bottom: 0;
+    width: 4px;
+}
+
+.dropZoneLeft {
+    left: -4px;
+}
+
+.dropZoneRight {
+    right: -4px;
+}
+
+.dropZoneLeft.isOver,
+.dropZoneRight.isOver {
+    width: 8px;
+}
+
+.dropZoneLeft.isOver {
+    left: -6px;
+}
+
+.dropZoneRight.isOver {
+    right: -6px;
+}

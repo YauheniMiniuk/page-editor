@@ -1,0 +1,32 @@
+.quote {
+    margin: 1.5em 0;
+    padding: 1.5em 2em;
+    border-left: 4px solid #d1d5db;
+    background-color: #f9fafb;
+    position: relative;
+}
+
+/* Стили для дочерних элементов, чтобы переопределить их отступы */
+.quote > * {
+    margin: 0;
+}
+.quote > *:not(:last-child) {
+    margin-bottom: 1em;
+}
+
+/* Дополнительно можно добавить кавычки для красоты */
+.quote::before {
+    content: '“';
+    position: absolute;
+    top: 0.5em;
+    left: 0.1em;
+    font-size: 4em;
+    color: #e5e7eb;
+    line-height: 1;
+    z-index: 0;
+}
+
+.quote > * {
+    position: relative; /* Чтобы текст был поверх кавычек */
+    z-index: 1;
+}

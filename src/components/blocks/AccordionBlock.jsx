@@ -1,69 +1,59 @@
 import React, { useState, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import styles from './AccordionBlock.module.css';
-import { withBlockFeatures } from '../../hocs/withBlockFeatures';
+import { nanoid } from 'nanoid';
+import classNames from 'classnames';
+import { withBlock } from '../../hocs/withBlock';
 
-// UI компоненты из твоего проекта
-import Switch from '../../ui/Switch';
+// --- UI и иконки ---
+import styles from './AccordionBlock.module.css';
+import { AccordionIcon, ChevronDownIcon, PlusIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon } from '../../utils/icons'; // Предполагаем, что иконки есть
 import Tabs from '../../ui/Tabs';
 import Tab from '../../ui/Tab';
+import Checkbox from '../../ui/Checkbox';
+import Input from '../../ui/Input';
 import ToolbarButton from '../../ui/ToolbarButton';
 
-// --- Иконки (простые SVG для примера) ---
-const AccordionIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 6H20M4 12H20M4 18H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
+//================================================================================
+// 1. Компонент отдельной вкладки (Accordion Item)
+//================================================================================
+const AccordionItemBlock = forwardRef(({ block, children, className, style, actions, mode, ...rest }, ref) => {
+    const { props = {} } = block;
+    const { title = "Заголовок" } = props;
 
-const ChevronDownIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
-// Иконки для тулбара
-const PlusIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
-const TrashIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-);
-
-
-// --- Компонент Элемента Аккордеона (без изменений) ---
-const AccordionItem = ({ block, children, isOpen, onToggle, mode }) => {
-    const headerChild = React.Children.toArray(children)[0];
-    const contentChildren = React.Children.toArray(children).slice(1);
+    // Эти пропсы придут от родителя (AccordionBlock)
+    const { isOpen, onToggle } = rest;
     const isEditMode = mode === 'edit';
 
-    // В режиме просмотра клик по заголовку открывает/закрывает элемент.
-    // В режиме редактирования клики обрабатываются BlockRenderer для выделения блоков.
-    const handleHeaderClick = isEditMode ? (e) => e.preventDefault() : onToggle;
+    const hasChildren = React.Children.count(children) > 0;
+
+    // Обработчик для редактирования заголовка прямо в блоке
+    const handleTitleBlur = (e) => {
+        if (!isEditMode) return;
+
+        const newTitle = e.currentTarget.textContent;
+        if (newTitle !== title) {
+            actions.update(block.id, { props: { ...props, title: newTitle } });
+        }
+    };
 
     return (
-        <div className={styles.item}>
-            <div
-                className={styles.itemHeader}
-                // Используем onMouseDown, чтобы не конфликтовать с dnd-kit, который может использовать onClick
-                onMouseDown={handleHeaderClick}
-            >
-                <div className={styles.itemTitle}>{headerChild}</div>
-                 <button type="button" onClick={onToggle} className={styles.itemChevronButton}>
-                    <div className={`${styles.itemIcon} ${isOpen ? styles.itemIconOpen : ''}`}>
-                        <ChevronDownIcon />
-                    </div>
-                </button>
-            </div>
+        <div ref={ref} className={classNames(styles.accordionItem, className)} style={style} {...rest}>
+            <button className={styles.itemHeader} onClick={onToggle}>
+                <span
+                    className={classNames(styles.itemTitle, { [styles.notEditable]: !isEditMode })}
+                    contentEditable={isEditMode}
+                    suppressContentEditableWarning
+                    onBlur={handleTitleBlur}
+                    onMouseDown={isEditMode ? (e) => e.stopPropagation() : undefined}
+                >
+                    {title}
+                </span>
+                <ChevronDownIcon className={classNames(styles.itemIcon, { [styles.itemIconOpen]: isOpen })} />
+            </button>
             <AnimatePresence initial={false}>
                 {isOpen && (
                     <motion.div
-                        className={styles.itemContent}
+                        key="content"
                         initial="collapsed"
                         animate="open"
                         exit="collapsed"
@@ -72,175 +62,219 @@ const AccordionItem = ({ block, children, isOpen, onToggle, mode }) => {
                             collapsed: { opacity: 0, height: 0 },
                         }}
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        className={styles.itemContent}
                     >
-                        <div className={styles.itemContentInner}>
-                            {contentChildren}
+                        {/* Это наша DND-зона */}
+                        <div className={styles.contentInner}>
+                            {hasChildren ? children : (
+                                isEditMode && (
+                                    <div className={styles.emptyDropZone}>
+                                        Перетащите блок сюда
+                                    </div>
+                                )
+                            )}
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
         </div>
     );
-};
+});
 
 
-// --- Основной Компонент Блока Аккордеона ---
-const AccordionBlock = forwardRef(({ block, children, mode, className, ...restProps }, ref) => {
-    const { variants = {} } = block;
-    const [openIndexes, setOpenIndexes] = useState([0]);
+//================================================================================
+// 2. Компонент-обертка для Аккордеона (Accordion Wrapper)
+//================================================================================
+const AccordionBlock = forwardRef(({ block, children, className, style, actions, ...rest }, ref) => {
+    const [openIndexes, setOpenIndexes] = useState([0]); // По умолчанию открыт первый элемент
 
-    const handleToggle = (indexToToggle) => {
-        if (variants.openMultiple) {
-            setOpenIndexes(prev =>
-                prev.includes(indexToToggle)
-                    ? prev.filter(i => i !== indexToToggle)
-                    : [...prev, indexToToggle]
+    const { allowMultipleOpen = false } = block.props || {};
+
+    const handleToggle = (index) => {
+        if (allowMultipleOpen) {
+            setOpenIndexes(current =>
+                current.includes(index) ? current.filter(i => i !== index) : [...current, index]
             );
         } else {
-            setOpenIndexes(prev => (prev.includes(indexToToggle) ? [] : [indexToToggle]));
+            setOpenIndexes(current => (current.includes(index) ? [] : [index]));
         }
     };
 
-    const finalClasses = [styles.accordion, className].filter(Boolean).join(' ');
-
     return (
-        <div ref={ref} className={finalClasses} {...restProps}>
-            {React.Children.map(children, (child, index) => {
-                if (!child.props.block || child.props.block.type !== 'core/accordion-item') {
-                    return child;
-                }
-                return (
-                    <AccordionItem
-                        key={child.props.block.id}
-                        block={child.props.block}
-                        isOpen={openIndexes.includes(index)}
-                        onToggle={() => handleToggle(index)}
-                        mode={mode}
-                    >
-                        {child.props.children}
-                    </AccordionItem>
-                );
-            })}
+        <div ref={ref} className={classNames(styles.accordionWrapper, className)} style={style} {...rest}>
+            {React.Children.map(children, (child, index) =>
+                React.cloneElement(child, {
+                    isOpen: openIndexes.includes(index),
+                    onToggle: () => handleToggle(index),
+                })
+            )}
         </div>
     );
 });
 
-// --- Информация о блоке Аккордеона ---
+//================================================================================
+// 3. Конфигурация для редактора
+//================================================================================
+
+// --- Конфиг для Вкладки (Item) ---
+AccordionItemBlock.blockInfo = {
+    type: 'core/accordion-item',
+    label: 'Элемент аккордеона',
+    isContainer: true,
+    description: "Отдельная вкладка для блока 'Аккордеон'. Не может быть использована самостоятельно.",
+    keywords: ['вкладка', 'панель', 'секция'],
+
+    // --- Правила ---
+    parent: ['core/accordion'],
+    allowedBlocks: null, // Может содержать любые блоки
+
+    // --- Поддержка функций ---
+    supports: {
+        // КЛЮЧЕВОЕ ПРАВИЛО: не показывать этот блок в панели добавления
+        inserter: false,
+        reusable: false,
+        html: false,
+    },
+
+    // --- Данные ---
+    defaultData: {
+        type: 'core/accordion-item',
+        props: { title: 'Новая вкладка' },
+        children: [],
+    },
+    // Тулбар для отдельной вкладки
+    getToolbarItems: ({ block, actions }) => (
+        <>
+            <ToolbarButton title="Переместить вверх" onClick={() => actions.swapBlock(block.id, 'up')}>
+                <ArrowUpIcon />
+            </ToolbarButton>
+            <ToolbarButton title="Переместить вниз" onClick={() => actions.swapBlock(block.id, 'down')}>
+                <ArrowDownIcon />
+            </ToolbarButton>
+            <div className="toolbarSeparator"></div>
+            <ToolbarButton title="Удалить вкладку" onClick={() => actions.delete(block.id)}>
+                <TrashIcon />
+            </ToolbarButton>
+        </>
+    ),
+};
+
+// --- Конфиг для Обертки (Accordion) ---
 AccordionBlock.blockInfo = {
     type: 'core/accordion',
     label: 'Аккордеон',
     icon: <AccordionIcon />,
-    // НОВОЕ: Указываем, что этот блок может содержать только элементы аккордеона
+    isContainer: true,
+    description: "Группирует контент в виде сворачиваемых панелей. Отлично подходит для секций FAQ.",
+    keywords: ['faq', 'вопросы и ответы', 'список', 'скрытый текст'],
+
+    // --- Правила ---
+    parent: null,
     allowedBlocks: ['core/accordion-item'],
 
-    defaultData: {
-        type: 'core/accordion',
-        children: [
-            { ...generateNewAccordionItem('Заголовок 1', 'Содержимое первого элемента.') },
-            { ...generateNewAccordionItem('Заголовок 2', 'Содержимое второго элемента.') },
-        ],
-        variants: { openMultiple: false },
-        props: {},
-        styles: {},
+    // --- Поддержка функций ---
+    supports: {
+        reusable: true,
+        anchor: true,
+        customClassName: true,
+        html: false,
     },
 
-    supportedVariants: {
-        openMultiple: { label: 'Открывать несколько' },
+    // --- Пример для превью ---
+    example: {
+        props: { allowMultipleOpen: false },
+        children: [
+            {
+                ...AccordionItemBlock.blockInfo.defaultData,
+                id: 'preview_1',
+                props: { title: "Что такое HTML Builder?" },
+                children: [{ type: 'core/text', id: 'preview_text_1', content: 'Это инструмент для визуального создания веб-страниц.' }]
+            },
+            { ...AccordionItemBlock.blockInfo.defaultData, id: 'preview_2', props: { title: "Зачем он нужен?" } },
+        ]
     },
-    
-    // НОВОЕ: Добавляем кнопку "Добавить элемент" в тулбар самого аккордеона
+
+    // --- Данные ---
+    defaultData: () => ({
+        type: 'core/accordion',
+        props: { allowMultipleOpen: false },
+        children: [
+            { id: nanoid(), ...AccordionItemBlock.blockInfo.defaultData, props: { title: "Первая вкладка" } },
+            { id: nanoid(), ...AccordionItemBlock.blockInfo.defaultData, props: { title: "Вторая вкладка" } },
+        ],
+    }),
     getToolbarItems: ({ block, actions }) => {
         const handleAddItem = () => {
-            const newItem = generateNewAccordionItem('Новый заголовок', 'Новое содержимое.');
+            const newItem = { id: nanoid(), ...AccordionItemBlock.blockInfo.defaultData };
             actions.update(block.id, {
-                children: [...block.children, newItem],
+                children: [...block.children, newItem]
             });
         };
 
-        return [
-            <ToolbarButton key="add-item" title="Добавить элемент" onClick={handleAddItem}>
+        return (
+            <ToolbarButton title="Добавить вкладку" onClick={handleAddItem}>
                 <PlusIcon />
             </ToolbarButton>
-        ];
+        );
     },
-    
-    getEditor: ({ block, onChange }, helpers) => {
-        const { variants = {} } = block;
-        const handleVariantChange = (name, value) => helpers.updateVariant(name, value);
+    // Настройки в боковой панели
+    getEditor: ({ block, onChange }) => {
+        const { props = {} } = block;
+
+        const handlePropsChange = (newProps) => {
+            onChange({ props: { ...props, ...newProps } });
+        };
+
+        // Редактирование заголовков всех вкладок централизованно
+        const handleItemTitleChange = (itemId, newTitle) => {
+            const newChildren = block.children.map(child => {
+                if (child.id === itemId) {
+                    return { ...child, props: { ...child.props, title: newTitle } };
+                }
+                return child;
+            });
+            onChange({ children: newChildren });
+        };
 
         return (
             <Tabs>
                 <Tab title="Настройки">
-                    <h4>Опции аккордеона</h4>
-                    <Switch
-                        label="Разрешить открытие нескольких элементов"
-                        checked={!!variants.openMultiple}
-                        onChange={(isChecked) => handleVariantChange('openMultiple', isChecked)}
+                    <h4>Основные</h4>
+                    <Checkbox
+                        label="Разрешить несколько открытых вкладок"
+                        checked={!!props.allowMultipleOpen}
+                        onChange={(e) => handlePropsChange({ allowMultipleOpen: e.target.checked })}
                     />
+                    <hr />
+                    <h4>Вкладки</h4>
+                    <div className={styles.editorList}>
+                        {block.children.map(child => (
+                            <Input
+                                key={child.id}
+                                value={child.props.title}
+                                onChange={(e) => handleItemTitleChange(child.id, e.target.value)}
+                            />
+                        ))}
+                    </div>
+                </Tab>
+                <Tab title="Стили">
+                    {/* Здесь можно добавить настройки стилей, как у контейнера */}
+                    <p>Настройки отступов, цветов и т.д.</p>
                 </Tab>
             </Tabs>
         );
-    },
+    }
 };
 
-// --- Компонент для Блока Элемента Аккордеона ---
-const AccordionItemBlock = forwardRef(({ block, children, className, ...restProps }, ref) => {
-    return (
-        <div ref={ref} className={`${styles.accordionItemWrapper} ${className}`} {...restProps}>
-            {children}
-        </div>
-    );
-});
+//================================================================================
+// 4. Экспорты
+//================================================================================
+AccordionBlock.blockStyles = styles;
+AccordionItemBlock.blockStyles = styles;
 
-// --- Информация о блоке Элемента Аккордеона ---
-AccordionItemBlock.blockInfo = {
-    type: 'core/accordion-item',
-    label: 'Элемент аккордеона',
-    // НОВОЕ: Указываем, что этот блок может быть только внутри аккордеона
-    parent: ['core/accordion'],
-    
-    defaultData: {
-        type: 'core/accordion-item',
-        children: [
-            { type: 'core/paragraph', props: { content: 'Новый заголовок' } },
-            { type: 'core/container', children: [] }
-        ],
-        props: {},
-        styles: {},
-    },
+// Экспортируем обернутые HOC'ом компоненты
+export const AccordionBlockWrapped = withBlock(AccordionBlock);
+export const AccordionItemBlockWrapped = withBlock(AccordionItemBlock);
 
-    // НОВОЕ: Добавляем кнопку "Удалить" в тулбар каждого элемента
-    getToolbarItems: ({ block, actions }) => {
-        return [
-            <ToolbarButton key="delete-item" title="Удалить элемент" onClick={() => actions.delete(block.id)}>
-                <TrashIcon />
-            </ToolbarButton>
-        ];
-    },
-};
-
-// --- Хелпер для генерации нового элемента с уникальными ID ---
-function generateNewAccordionItem(title, content) {
-    const randomSuffix = Math.random().toString(36).substring(2, 9);
-    const dateSuffix = Date.now();
-    const uniqueId = `${dateSuffix}-${randomSuffix}`;
-    
-    return {
-        type: 'core/accordion-item',
-        id: `accordion-item-${uniqueId}`,
-        children: [
-            { type: 'core/text', id: `text-title-${uniqueId}`, props: { content: title } },
-            { 
-                type: 'core/container', 
-                id: `container-content-${uniqueId}`, 
-                children: [
-                    { type: 'core/paragraph', id: `text-content-${uniqueId}`, props: { content: content } }
-                ] 
-            }
-        ]
-    };
-}
-
-
-// Экспортируем оба блока для регистрации в системе
-export { AccordionBlock, AccordionItemBlock };
+// Экспорт по умолчанию для основного блока
+export default AccordionBlockWrapped;

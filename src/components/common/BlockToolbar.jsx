@@ -83,10 +83,13 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
   }, [targetRef, selectedBlock.id, blockInfo?.index]);
 
   const toolbarContent = (
-    <div ref={toolbarRef} className={styles.toolbar} style={style} onClick={handleToolbarClick} onMouseDown={handleToolbarClick}>
+    <div ref={toolbarRef} className={styles.toolbar} style={style} onMouseDown={(e) => e.preventDefault()}>
+      {/* Ручка для перетаскивания. dnd-kit сам правильно обработает ее события. */}
       <div className={styles.dragHandle} {...dragHandleListeners}>
         <DragHandleIcon />
       </div>
+
+      {/* Эти кнопки уже "умные" и сами останавливают всплытие */}
       <div className={styles.toolbarButtonGroup}>
         <ToolbarButton title="Переместить вверх" onClick={handleSwapUp} disabled={isFirst}>
           ↑
@@ -100,12 +103,17 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
           </ToolbarButton>
         )}
       </div>
+
       {React.Children.count(children) > 0 && (
         <div className={styles.toolbarSeparator} />
       )}
+
       {children}
+
       <div className={styles.toolbarSeparator} />
-      <div className={styles.toolbarButtonGroup}>
+
+      {/* Оставляем обработчик только на группе с выпадающим меню */}
+      <div className={styles.toolbarButtonGroup} onMouseDown={(e) => e.stopPropagation()}>
         <DropdownMenu triggerContent="⋮" items={menuItems} />
       </div>
     </div>

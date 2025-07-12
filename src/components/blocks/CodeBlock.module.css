@@ -1,0 +1,21 @@
+.pre {
+    background-color: #1e1e1e; /* Темный фон, как в VS Code */
+    color: #d4d4d4; /* Светлый текст */
+    padding: 1.5em;
+    border-radius: 8px;
+    margin: 1.5em 0;
+    white-space: pre-wrap; /* Перенос длинных строк */
+    word-break: break-all; /* Разрыв слов, чтобы не ломать верстку */
+    overflow-x: auto; /* Горизонтальная прокрутка, если нужно */
+}
+
+.code {
+    font-family: 'Fira Code', 'Courier New', monospace; /* Моноширинный шрифт */
+    font-size: 0.9em;
+    line-height: 1.6;
+}
+
+.code:focus {
+    outline: 2px solid rgba(96, 165, 250, 0.7); /* Синяя обводка при фокусе */
+    border-radius: 4px;
+}

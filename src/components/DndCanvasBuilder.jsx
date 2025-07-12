@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
+import { useLocation } from 'react-router-dom';
 import {
   DndContext,
   DragOverlay,
@@ -7,14 +8,15 @@ import {
   useSensor,
   useSensors,
   pointerWithin,
-  rectIntersection
+  rectIntersection,
+  closestCenter
 } from '@dnd-kit/core';
 import { nanoid } from 'nanoid';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useDebouncedCallback } from 'use-debounce';
 
 import styles from './DndCanvasBuilder.module.css';
-import { BLOCK_TYPES, AVAILABLE_BLOCKS } from '../utils/constants';
+import { BLOCK_TYPES, AVAILABLE_BLOCKS, BLOCK_COMPONENTS } from '../utils/constants';
 import { findBlockAndParent, generatePreviewLayout, insertBlockRecursive, isAncestor, removeBlockRecursive } from '../utils/blockUtils';
 import useBlockManagement from '../hooks/useBlockManagement';
 
@@ -25,19 +27,22 @@ import StructurePanel from './panels/StructurePanel';
 import DragOverlayContent from './common/DragOverlayContent';
 import { useBlockManager } from '../contexts/BlockManagementContext';
 import Header from './Header';
+import { setCursorPosition } from '../utils/domUtils';
 
-const DropIndicator = ({ indicator }) => {
-    const style = {
-        position: 'absolute',
-        width: indicator.rect.width,
-        height: '2px',
-        background: '#3b82f6',
-        left: indicator.rect.left,
-        top: indicator.position === 'top' ? indicator.rect.top : indicator.rect.bottom,
-        pointerEvents: 'none', // Важно, чтобы он не мешал событиям мыши
-        zIndex: 10000,
-    };
-    return <div style={style} />;
+const DropIndicator = ({ rect, isOverlay }) => {
+  const style = {
+    position: 'absolute',
+    zIndex: 10000,
+    pointerEvents: 'none',
+    // Если это обводка, рисуем рамку. Если линия - сплошной фон.
+    ...(isOverlay
+      ? { border: '2px dashed #3b82f6', borderRadius: '4px' }
+      : { backgroundColor: '#3b82f6', borderRadius: '2px' }
+    ),
+    // Применяем геометрию
+    ...rect,
+  };
+  return <div style={style} />;
 };
 
 export default function DndCanvasBuilder({ initialMode = 'edit' }) {
@@ -45,9 +50,10 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const versionId = searchParams.get('version');
+  const location = useLocation();
 
   // Получаем состояние и единый объект `actions` из нашего хука
-  const { blocks, selectedBlockId, activeId, activeDragItem, setActiveDragItem, setOverDropZone, actions } = useBlockManager();
+  const { blocks, selectedBlockId, activeId, focusRequest, actions } = useBlockManager();
   const [isLoading, setIsLoading] = useState(true);
   const [isNewPage, setIsNewPage] = useState(false);
   const [pageTitle, setPageTitle] = useState('Новая страница');
@@ -57,6 +63,8 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
   const [panelContent, setPanelContent] = useState(null);
   const [isPropertiesPanelVisible, setPropertiesPanelVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  const [dropIndicator, setDropIndicator] = useState(null);
 
   const isEditMode = mode === 'edit';
 
@@ -123,6 +131,24 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
 
     fetchPageData();
   }, [slug, mode, versionId]);
+
+  useEffect(() => {
+    // Если в URL есть хэш (например, #section-qa9ixx)
+    if (location.hash) {
+      // Убираем #, чтобы получить чистый ID
+      const id = location.hash.substring(1);
+
+      // Даем React микро-паузу, чтобы он точно успел все отрисовать
+      setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) {
+          // Если элемент найден, плавно скроллим к нему
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100); // Небольшая задержка для надежности
+    }
+    // Этот эффект будет срабатывать каждый раз, когда меняется URL
+  }, [location]);
 
   const handleCreateNewPage = async () => {
     const title = prompt("Введите заголовок для новой страницы:");
@@ -220,153 +246,223 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const selectedBlock = useMemo(() => findBlockAndParent(blocks, selectedBlockId)?.block || null, [blocks, selectedBlockId]);
 
-  const customCollisionDetection = useCallback((args) => {
-    // Сначала ищем точное попадание под курсор
-    const pointerCollisions = pointerWithin(args);
-    if (pointerCollisions.length > 0) {
-      return pointerCollisions;
-    }
-    // Если под курсором ничего нет, ищем ближайшее пересечение
-    return rectIntersection(args);
-  }, []);
+  const activeBlock = useMemo(() => {
+    if (!activeId) return null;
+    // Находим перетаскиваемый блок по его ID
+    const data = findBlockAndParent(blocks, activeId);
+    return data ? data.block : null;
+  }, [activeId, blocks]);
 
   const handleDragStart = ({ active }) => {
-    // В `active` есть вся нужная нам информация, включая `data`.
-    // Просто сохраняем весь этот объект.
-    setActiveDragItem(active);
     actions.setActiveId(active.id);
+    // Не нужно сохранять весь active, достаточно id
   };
 
-  const handleDragCancel = useCallback(() => {
-    setActiveDragItem(null);
-    setOverDropZone(null);
-    actions.setActiveId(null);
-  }, [actions]);
+  const handleDragOver = (event) => {
+    const { active, over } = event;
 
-  const handleDragOver = ({ over }) => {
-    setOverDropZone(over);
-  };
-
-  const handleDragEnd = useCallback(({ active, over }) => {
-    console.log('--- handleDragEnd: Начало ---');
-    console.log('Active (перетаскиваемый элемент):', active);
-    console.log('Over (зона сброса):', over);
-
-    // Сразу сбрасываем состояние, если перетаскивание отменено или брошено в пустоту
-    if (!over) {
-      console.log('🚫 Отмена: Перетаскивание завершилось без цели (over is null). Сброс состояний.');
-      setActiveDragItem(null);
-      setOverDropZone(null);
-      actions.setActiveId(null);
-      console.log('--- handleDragEnd: Конец (без цели) ---');
+    // Используем 'over' напрямую. Это надежнее и проще.
+    if (!over || active.id === over.id) {
+      setDropIndicator(null);
       return;
     }
 
-    const activeData = active.data.current;
-    const overData = over.data.current;
-
-    console.log('Данные перетаскиваемого элемента (activeData):', activeData);
-    console.log('Данные зоны сброса (overData):', overData);
-
-    // --- УСИЛЕННЫЙ ЗАЩИТНЫЙ МЕХАНИЗМ ---
-    // Явно проверяем, что ID перетаскиваемого БЛОКА не совпадает с ID ЦЕЛИ.
-    if (activeData?.block?.id === overData?.targetId) {
-      console.warn('🛡️ Защита: Попытка сбросить блок на самого себя заблокирована. ID блока:', activeData?.block?.id);
-      setActiveDragItem(null);
-      setOverDropZone(null);
-      actions.setActiveId(null);
-      console.log('--- handleDragEnd: Конец (сброс на себя) ---');
-      return; // <-- Выходим, если пытаемся бросить блок на него же
+    // --- КЛЮЧЕВОЙ ФИКС ---
+    // Добавляем защитную проверку на over.rect, чтобы избежать ошибки.
+    const overRect = over.rect;
+    if (!overRect) {
+      setDropIndicator(null);
+      return;
     }
 
-    // --- ОСНОВНАЯ ЛОГИКА ---
-    if (overData?.targetId) {
-      console.log('✅ Основная логика: Обнаружен targetId:', overData.targetId);
+    const overId = over.id;
+    let overData = over.data.current;
 
-      const isDropFromSidebar = activeData?.context === 'sidebar' && (overData?.context === 'canvas' || overData?.context === 'structure');
-      const isReorderingInSameContext = activeData?.context !== 'sidebar' && activeData?.context === overData?.context;
+    // Обработка корневой дроп-зоны
+    if (overId === 'canvas-root-dropzone') {
+      if (blocks.length > 0) {
+        setDropIndicator(null);
+        return;
+      }
+      // Если холст пуст, создаем "виртуальные" данные для корневой зоны
+      overData = { isContainer: true, parentDirection: 'column' };
+    }
 
-      console.log('Проверка контекста:');
-      console.log(`  - Сброс из сайдбара? -> ${isDropFromSidebar}`);
-      console.log(`  - Пересортировка в том же контексте? -> ${isReorderingInSameContext}`);
+    const isContainer = overData.isContainer;
+    const isHorizontal = overData.parentDirection === 'row';
+    const edgeThreshold = 0.25;
 
-      if (isDropFromSidebar || isReorderingInSameContext) {
-        console.log('👍 Условие выполнено: Либо сброс из сайдбара, либо пересортировка.');
+    const relativeY = (event.clientY - overRect.top) / overRect.height;
+    const relativeX = (event.clientX - overRect.left) / overRect.width;
 
-        const draggedBlock = activeData.block;
-        const activeBlockId = draggedBlock?.id;
-        const targetId = overData.targetId;
-        const position = overData.position || overData.calculatedPosition;
+    let position = null;
+    let indicatorRect = null;
 
-        console.log('Параметры для перемещения:');
-        console.log('  - Перетаскиваемый блок (draggedBlock):', draggedBlock);
-        console.log('  - ID перетаскиваемого блока (activeBlockId):', activeBlockId);
-        console.log('  - ID цели (targetId):', targetId);
-        console.log('  - Позиция вставки (position):', position);
+    // Приоритет 1: Края
+    if (isHorizontal) {
+      if (relativeX < edgeThreshold) position = 'left';
+      else if (relativeX > (1 - edgeThreshold)) position = 'right';
+    } else {
+      if (relativeY < edgeThreshold) position = 'top';
+      else if (relativeY > (1 - edgeThreshold)) position = 'bottom';
+    }
 
-        // Эта проверка остается как второй уровень защиты
-        if (activeBlockId !== targetId) {
-          console.log('🛡️ Пройдена вторая проверка на само-сброс.');
-          let initialBlocks = [...blocks];
-          let blockToInsert = draggedBlock;
+    // Приоритет 2: Центр контейнера
+    if (position === null && isContainer) {
+      position = 'inner';
+    }
 
-          if (activeData.isSidebarItem) {
-            console.log('➡️ Логика для сайдбара: Создание нового блока.');
-            const info = AVAILABLE_BLOCKS.find(b => b.type === activeData.type);
-            if (info) {
-              blockToInsert = { id: nanoid(), ...info.defaultData };
-              console.log('Создан новый блок для вставки:', blockToInsert);
-            } else {
-              console.error('Не удалось найти информацию о блоке для типа:', activeData.type);
-              blockToInsert = null;
-            }
-          } else if (activeData.isCanvasItem || activeData.isStructureItem) {
-            console.log('🔄 Логика для канваса/структуры: Перемещение существующего блока.');
-            // Проверка на перемещение контейнера в самого себя
-            if (draggedBlock.type === 'core/container') {
-              const isMovingIntoDescendant = isAncestor(blocks, activeBlockId, targetId);
-              console.log(`Проверка предка: Является ли цель (${targetId}) потомком источника (${activeBlockId})? -> ${isMovingIntoDescendant}`);
-              if (isMovingIntoDescendant) {
-                console.warn("Действие заблокировано: нельзя переместить контейнер в его потомка.");
-                // Важно сбросить состояния и выйти
-                setActiveDragItem(null);
-                setOverDropZone(null);
-                actions.setActiveId(null);
-                console.log('--- handleDragEnd: Конец (предотвращено перемещение в потомка) ---');
-                return;
-              }
-            }
-            console.log('Удаляем блок из его старой позиции. ID для удаления:', activeBlockId);
-            initialBlocks = removeBlockRecursive(blocks, activeBlockId);
-            console.log('Структура блоков после удаления:', initialBlocks);
-          }
-
-          if (blockToInsert) {
-            console.log('Вставляем блок в новую позицию...');
-            const newBlocks = insertBlockRecursive(initialBlocks, targetId, blockToInsert, position);
-            console.log('✅ Новая структура блоков (newBlocks):', newBlocks);
-            actions.setBlocks(newBlocks);
-            console.log('Действие setBlocks вызвано.');
-          } else {
-            console.warn('Нет блока для вставки (blockToInsert is null). Операция прервана.');
-          }
-        } else {
-          console.warn('🛡️ Сработала вторая проверка на само-сброс. ID совпадают:', activeBlockId);
-        }
+    // Приоритет 3: Центр обычного блока
+    if (position === null) {
+      if (isHorizontal) {
+        position = relativeX < 0.5 ? 'left' : 'right';
       } else {
-        console.log('❌ Условие не выполнено. Контексты несовместимы. Действий не требуется.');
+        position = relativeY < 0.5 ? 'top' : 'bottom';
+      }
+    }
+
+    // Вычисляем геометрию индикатора
+    switch (position) {
+      case 'top':
+        indicatorRect = { top: overRect.top - 2, left: overRect.left, width: overRect.width, height: 4 };
+        break;
+      case 'bottom':
+        indicatorRect = { top: overRect.bottom - 2, left: overRect.left, width: overRect.width, height: 4 };
+        break;
+      case 'left':
+        indicatorRect = { top: overRect.top, left: overRect.left - 2, width: 4, height: overRect.height };
+        break;
+      case 'right':
+        indicatorRect = { top: overRect.top, left: overRect.right - 2, width: 4, height: overRect.height };
+        break;
+      case 'inner':
+        indicatorRect = overRect;
+        break;
+    }
+
+    if (indicatorRect) {
+      const targetId = overId === 'canvas-root-dropzone' ? 'root' : overId;
+      setDropIndicator({ rect: indicatorRect, position, targetId });
+    } else {
+      setDropIndicator(null);
+    }
+  };
+
+  const handleDragEnd = ({ active, over }) => {
+    // Получаем данные для вставки из состояния индикатора, а не из `over`
+    const position = dropIndicator?.position;
+    const targetId = dropIndicator?.targetId;
+
+    // Сбрасываем состояния в любом случае
+    actions.setActiveId(null);
+    setDropIndicator(null);
+
+    if (!position || !targetId || !active) {
+      return;
+    }
+
+    // --- Твоя логика вставки, но с данными из индикатора ---
+    const activeData = active.data.current;
+
+    // --- НОВАЯ ЛОГИКА ОПРЕДЕЛЕНИЯ БЛОКА ---
+    let draggedBlock;
+
+    if (activeData.isSidebarItem) {
+      // Если тащим НОВЫЙ блок из сайдбара, создаем его объект из шаблона
+      const info = AVAILABLE_BLOCKS.find(b => b.type === activeData.type);
+      if (!info) {
+        console.error(`❌ ПРЕРЫВАНИЕ: Не найдена информация для блока типа "${activeData.type}" из сайдбара.`);
+        return;
+      }
+      // Это временный объект, который нужен только для валидации
+      draggedBlock = info.defaultData();
+    } else {
+      // Если тащим СУЩЕСТВУЮЩИЙ блок с холста
+      draggedBlock = activeData.block;
+    }
+
+    // Теперь основная проверка
+    if (!draggedBlock) {
+      console.error("❌ ПРЕРЫВАНИЕ: Не удалось определить перетаскиваемый блок.");
+      return;
+    }
+    // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
+
+
+    // --- ВАЛИДАТОР (остается без изменений, но теперь он будет работать) ---
+    console.clear();
+    console.log("--- 🏁 СТАРТ ВАЛИДАЦИИ DND ---");
+    console.log(`➡️ Перетаскиваем блок: %c${draggedBlock.type}`, "color: blue; font-weight: bold;");
+
+    const targetInfo = findBlockAndParent(blocks, targetId);
+    // ... остальной код валидации с логами ...
+    const targetParent = (position === 'inner') ? targetInfo?.block : targetInfo?.parent;
+    console.log(`🎯 Целевой родитель (targetParent):`, targetParent ? `${targetParent.type} (id: ${targetParent.id})` : "null (Корень редактора)");
+
+    const { blockInfo: draggedBlockInfo } = BLOCK_COMPONENTS[draggedBlock.type] || {};
+
+    if (draggedBlockInfo?.parent) {
+      console.log(`🔎 Правило для перетаскиваемого блока: должен находиться внутри [${draggedBlockInfo.parent.join(', ')}]`);
+      const targetParentType = targetParent ? targetParent.type : null;
+      if (!draggedBlockInfo.parent.includes(targetParentType)) {
+        console.error(`❌ ПРЕРЫВАНИЕ (Правило 1): Тип родителя "${targetParentType}" не входит в список разрешенных [${draggedBlockInfo.parent.join(', ')}].`);
+        return;
+      }
+      console.log("✅ Проверка 1 пройдена.");
+    } else {
+      console.log("ℹ️ У перетаскиваемого блока нет правил для родителя.");
+    }
+
+    if (targetParent) {
+      const { blockInfo: targetParentInfo } = BLOCK_COMPONENTS[targetParent.type] || {};
+      if (targetParentInfo?.allowedBlocks) {
+        console.log(`🔎 Правило для родителя "${targetParent.type}": разрешает только [${targetParentInfo.allowedBlocks.join(', ')}]`);
+        if (!targetParentInfo.allowedBlocks.includes(draggedBlock.type)) {
+          console.error(`❌ ПРЕРЫВАНИЕ (Правило 2): Родитель не разрешает вставлять в себя "${draggedBlock.type}".`);
+          return;
+        }
+        console.log("✅ Проверка 2 пройдена.");
+      } else {
+        console.log(`ℹ️ У родителя "${targetParent.type}" нет правил для дочерних элементов.`);
       }
     } else {
-      console.log('ℹ️ Нет targetId в overData. Никаких действий с блоками не выполняется.');
+      console.log("ℹ️ Нет родителя, проверка дочерних правил не требуется.");
     }
 
-    // Сбрасываем все временные состояния в любом случае
-    console.log('🔄 Финальный сброс состояний (activeDragItem, overDropZone, activeId).');
-    setActiveDragItem(null);
-    setOverDropZone(null);
+    console.log("✅ ВАЛИДАЦИЯ ПРОЙДЕНА! Начинаем вставку блока.");
+    // --- КОНЕЦ ВАЛИДАТОРА ---
+
+    // Проверка на перетаскивание в самого себя или своего потомка
+    if (isAncestor(blocks, active.id, targetId)) {
+      console.warn("Действие заблокировано: нельзя переместить контейнер в его потомка.");
+      return;
+    }
+
+    let blockToInsert;
+    let initialBlocks = blocks;
+
+    if (activeData.isSidebarItem) {
+      const info = AVAILABLE_BLOCKS.find(b => b.type === activeData.type);
+      blockToInsert = { id: nanoid(), ...info.defaultData() };
+    } else {
+      blockToInsert = draggedBlock;
+      initialBlocks = removeBlockRecursive(blocks, active.id);
+    }
+
+    if (blockToInsert) {
+      const newBlocks = insertBlockRecursive(initialBlocks, targetId, blockToInsert, position);
+      actions.setBlocks(newBlocks);
+    }
+  };
+
+  const handleDragCancel = () => {
     actions.setActiveId(null);
-    console.log('--- handleDragEnd: Конец ---');
-  }, [blocks, actions, setActiveDragItem, setOverDropZone]);
+    setDropIndicator(null);
+  };
+
+  const collisionDetectionStrategy = (args) => {
+    return closestCenter(args);
+  };
 
   if (isLoading) {
     return <div>Загрузка...</div>;
@@ -433,16 +529,22 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
     return (
       <DndContext
         sensors={sensors}
-        collisionDetection={customCollisionDetection}
+        collisionDetection={collisionDetectionStrategy}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
         {builderContent}
-        <DragOverlay>
-          {activeDragItem ? <DragOverlayContent block={activeDragItem.data.current.block} /> : null}
-        </DragOverlay>
+
+        <DragOverlay>{activeBlock ? <DragOverlayContent block={activeBlock} /> : null}</DragOverlay>
+
+        {dropIndicator && (
+          <DropIndicator
+            rect={dropIndicator.rect}
+            isOverlay={dropIndicator.position === 'inner'}
+          />
+        )}
       </DndContext>
     );
   }

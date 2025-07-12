@@ -1,0 +1,46 @@
+.tabsWrapper {
+    width: 100%;
+    margin: 1.5em 0;
+}
+
+.tabNav {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #e5e7eb;
+    margin-bottom: -2px; /* Чтобы активный таб перекрывал границу */
+}
+
+.tabButton {
+    padding: 12px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #6b7280;
+    position: relative;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.2s;
+}
+
+.tabButton:hover {
+    color: #111827;
+}
+
+.tabButton.isActive {
+    color: #3b82f6;
+    border-color: #3b82f6;
+    font-weight: 500;
+}
+
+.tabButton span:focus {
+    outline: none;
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 4px;
+}
+
+.tabContent {
+    border: 2px solid #e5e7eb;
+    padding: 24px;
+    border-radius: 0 8px 8px 8px; /* Скругляем все углы, кроме левого верхнего */
+}

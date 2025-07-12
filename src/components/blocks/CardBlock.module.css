@@ -1,0 +1,35 @@
+.card {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background-color: #fff;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transition: box-shadow 0.2s ease-in-out;
+    margin: 1.5em auto;
+}
+
+.card:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Убираем отступы у картинки, если она первая */
+.card :global([data-block-type="core/image"]:first-child) {
+    margin: 0;
+}
+.card :global([data-block-type="core/image"]:first-child figure) {
+    margin: 0;
+}
+
+
+.cardContent {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Убираем лишние отступы у внутренних элементов */
+.cardContent > * {
+    margin: 0;
+}

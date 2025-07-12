@@ -1,9 +1,11 @@
 import React, { forwardRef } from 'react';
 import { motion } from 'framer-motion';
-import styles from './ImageBlock.module.css';
-import { withBlockFeatures } from '../../hocs/withBlockFeatures';
+import classNames from 'classnames';
 
-// Импорты для инспектора и тулбара
+import styles from './ImageBlock.module.css';
+import { withBlock } from '../../hocs/withBlock';
+
+// --- UI и иконки ---
 import Tabs from '../../ui/Tabs';
 import Tab from '../../ui/Tab';
 import Input from '../../ui/Input';
@@ -14,43 +16,68 @@ import ColorPicker from '../../ui/ColorPicker';
 import { ImageIcon, ContentWidthIcon, WideWidthIcon, FullWidthIcon } from '../../utils/icons';
 import Checkbox from '../../ui/Checkbox';
 
-
-// 1. АРХИТЕКТУРА: Компонент стал "глупым", принимает готовый className и ref
-const ImageBlock = forwardRef(({ block, className, ...restProps }, ref) => {
+//================================================================================
+// 1. Компонент блока "Изображение"
+//================================================================================
+const ImageBlock = forwardRef(({ block, mode, className, style, actions, ...rest }, ref) => {
   const { props = {}, styles: inlineStyles = {} } = block;
+  const isEditMode = mode === 'edit';
 
-  const finalClasses = [
-    styles.figure,
-    className,
-    props.stretchToParent ? styles.isStretchedToParent : '',
-  ].filter(Boolean).join(' ');
+  const finalClasses = classNames(styles.figure, className);
+  const finalStyles = { ...inlineStyles, ...style };
 
-  // 2. РЕНДЕРИНГ: Собираем инлайн-стили и готовим изображение
+  // Обработчик для редактирования подписи
+  const handleCaptionBlur = (e) => {
+    if (isEditMode && actions) {
+      const newCaption = e.currentTarget.textContent;
+      if (newCaption !== props.caption) {
+        actions.update(block.id, { props: { ...props, caption: newCaption } });
+      }
+    }
+  };
+
+  // Если нет картинки и мы в режиме редактирования - показываем плейсхолдер
+  if (!props.src && isEditMode) {
+    return (
+      <div ref={ref} className={classNames(finalClasses, styles.placeholder)} style={finalStyles} {...rest}>
+        <ImageIcon />
+        <span>Выберите изображение</span>
+      </div>
+    );
+  }
+
+  // Рендерим изображение
   const imageElement = (
     <img
-      src={props.src || 'https://via.placeholder.com/600x400?text=Image'}
+      src={props.src}
       alt={props.alt || ''}
       className={styles.image}
+      onError={(e) => { e.target.style.display = 'none'; /* Можно добавить и плейсхолдер на случай битой ссылки */ }}
     />
   );
 
-  // 2.1. Если есть ссылка, оборачиваем изображение в тег <a>
-  const imageWithLink = props.href ? (
+  // Оборачиваем в ссылку, если она есть
+  const imageWithLink = props.href && !isEditMode ? (
     <a href={props.href} target="_blank" rel="noopener noreferrer">
       {imageElement}
     </a>
   ) : imageElement;
 
   return (
-    <motion.figure
-      ref={ref}
-      className={finalClasses}
-      style={inlineStyles}
-      {...restProps}
-    >
+    <motion.figure ref={ref} className={finalClasses} style={finalStyles} {...rest}>
       {imageWithLink}
-      {props.caption && (
-        <figcaption className={styles.caption} contentEditable suppressContentEditableWarning>
+      {(props.caption || isEditMode) && (
+        <figcaption
+          className={styles.caption}
+          // Включаем редактирование подписи
+          contentEditable={isEditMode}
+          suppressContentEditableWarning={true}
+          onBlur={handleCaptionBlur}
+          // Чтобы при клике на подпись не выделялся весь блок
+          onMouseDown={isEditMode ? e => e.stopPropagation() : undefined}
+          // Показываем плейсхолдер, если подписи нет
+          data-placeholder={!props.caption ? "Добавить подпись" : ""}
+        >
           {props.caption}
         </figcaption>
       )}
@@ -58,17 +85,50 @@ const ImageBlock = forwardRef(({ block, className, ...restProps }, ref) => {
   );
 });
 
+ImageBlock.blockStyles = styles;
+
+//================================================================================
+// 2. "Паспорт" блока
+//================================================================================
 ImageBlock.blockInfo = {
   type: 'core/image',
   label: 'Изображение',
   icon: <ImageIcon />,
+  isContainer: false,
 
-  defaultData: {
+  description: 'Вставляет изображение из медиатеки или по URL-адресу.',
+  keywords: ['картинка', 'фото', 'медиа', 'picture', 'photo'],
+
+  parent: null,
+  allowedBlocks: [],
+
+  supports: {
+    reusable: true,
+    anchor: true,
+    customClassName: true,
+    html: false,
+  },
+
+  transforms: {
+    to: [{ type: 'block', block: 'core/container' }],
+    from: [{ type: 'block', block: 'core/text' }], // Можно будет вставить URL и он превратится в картинку
+  },
+
+  example: {
+    props: {
+      src: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809',
+      alt: 'Абстрактный градиент',
+      caption: 'Красивый фон',
+    },
+    variants: { align: 'wide', shape: 'rounded' },
+  },
+
+  defaultData: () => ({
     type: 'core/image',
     props: { src: '', alt: 'Замещающий текст', caption: '', href: '' },
-    variants: { align: 'none' }, // Теперь align - это ширина (none, wide, full)
+    variants: { align: 'none', shape: 'default' },
     styles: {},
-  },
+  }),
 
   supportedVariants: {
     align: {
@@ -173,5 +233,4 @@ ImageBlock.blockInfo = {
   }
 };
 
-// 5. АРХИТЕКТУРА: Экспортируем компонент, обернутый в HOC
-export default withBlockFeatures(ImageBlock, styles);
+export default withBlock(ImageBlock);

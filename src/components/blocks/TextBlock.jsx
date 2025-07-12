@@ -1,6 +1,8 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import classNames from 'classnames';
 import styles from './TextBlock.module.css';
+
 import Tabs from '../../ui/Tabs';
 import Tab from '../../ui/Tab';
 import ColorPicker from '../../ui/ColorPicker';
@@ -11,55 +13,124 @@ import PresetSelector from '../../ui/PresetSelector';
 import CustomUnitInput from '../../ui/CustomUnitInput';
 import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon, ParagraphIcon } from '../../utils/icons';
 import { withBlockFeatures } from '../../hocs/withBlockFeatures';
+import { withBlock } from '../../hocs/withBlock';
+import { useInlineEditing } from '../../hooks/useInlineEditing';
+import { useBlockManager } from '../../contexts/BlockManagementContext';
+import { toggleStyle } from '../../utils/textUtils';
 
-const TextBlock = forwardRef(
-  ({ block, mode, actions, className, isEditingText, onFocusOut, ...restProps }, ref) => {
-    const { props = {}, content, styles: inlineStyles = {} } = block;
-    const Tag = props.as || 'p';
-    const MotionTag = motion[Tag] || motion.p;
+//================================================================================
+// 1. Компонент TextBlock
+//================================================================================
+const TextBlock = forwardRef(({ block, actions, className, style, mode, isSelected, ...rest }, ref) => {
+  const { props = {}, content } = block;
+  const isEditMode = mode === 'edit';
+  const MotionTag = motion[props.as || 'p'];
+  const contentRef = useRef(null);
 
-    const finalClasses = [
-      styles.text,
-      className,
-      props.hasDropCap ? styles.hasDropCap : '',
-    ].filter(Boolean).join(' ');
+  const { isInlineEditing } = useBlockManager();
+  const isCurrentlyEditing = isEditMode && isSelected && isInlineEditing;
 
-    const handleSaveOnBlur = (e) => {
-      if (actions && e.currentTarget.innerHTML !== content) {
-        actions.update(block.id, { content: e.currentTarget.innerHTML });
-      }
-      if (onFocusOut) {
-        onFocusOut(e);
-      }
-    };
+  const mergeRefs = (node) => {
+    contentRef.current = node;
+    if (typeof ref === 'function') ref(node);
+    else if (ref) ref.current = node;
+  };
 
-    return (
-      <MotionTag
-        ref={ref}
-        className={finalClasses}
-        style={inlineStyles}
-        contentEditable={mode === 'edit' && isEditingText}
-        suppressContentEditableWarning={true}
-        onBlur={handleSaveOnBlur}
-        dangerouslySetInnerHTML={{ __html: content }}
-        {...restProps}
-      />
-    );
-  }
-);
+  useLayoutEffect(() => {
+    if (contentRef.current && !isCurrentlyEditing && contentRef.current.innerHTML !== content) {
+      contentRef.current.innerHTML = content;
+    }
+  }, [content, isCurrentlyEditing]);
+
+  // --- НОВЫЙ ОБРАБОТЧИК ---
+  const handleMouseDown = (e) => {
+    // Если кликаем на уже выделенный блок, сразу включаем режим редактирования
+    if (isSelected && isEditMode) {
+      actions.setInlineEditing(true);
+    }
+    // Передаем событие дальше стандартному обработчику из dnd-kit
+    rest.onMouseDown?.(e);
+  };
+
+  const handleBlur = (e) => {
+    const newContent = e.currentTarget.innerHTML;
+    if (newContent !== content) {
+      actions.update(block.id, { content: newContent });
+    }
+    actions.setInlineEditing(false);
+  };
+
+  return (
+    <MotionTag
+      ref={mergeRefs}
+      className={classNames(styles.text, { [styles.hasDropCap]: props.hasDropCap }, className)}
+      style={{ ...block.styles, ...style }}
+      onBlur={handleBlur}
+      // Включаем редактирование всегда, когда блок выбран и активен флаг inline-editing
+      contentEditable={isCurrentlyEditing}
+      suppressContentEditableWarning={true}
+      {...rest}
+      // Перехватываем onMouseDown
+      onMouseDown={handleMouseDown}
+    />
+  );
+});
+
+TextBlock.blockStyles = styles;
 
 TextBlock.blockInfo = {
+  // --- Основная информация ---
   type: 'core/text',
   label: 'Параграф',
   icon: <ParagraphIcon />,
+  isContainer: false, // Это не контейнер
 
-  defaultData: {
+  // --- Поиск и добавление ---
+  description: 'Основной блок для написания текста, основа любого контента.',
+  keywords: ['текст', 'абзац', 'описание', 'paragraph'],
+
+  // --- Правила вложенности ---
+  parent: null, // Может находиться где угодно
+  allowedBlocks: [], // Не может содержать другие блоки
+
+  // --- Поддержка функций редактора ---
+  supports: {
+    reusable: true,
+    anchor: true,
+    customClassName: true,
+    // Для текстового блока важно разрешить прямое редактирование HTML
+    html: true,
+  },
+
+  // --- Трансформации ---
+  transforms: {
+    // Это самый "трансформируемый" блок
+    to: [
+      { type: 'block', block: 'core/heading', label: 'Заголовок' },
+      // В будущем можно добавить 'core/list', 'core/quote' и т.д.
+    ],
+    from: [
+      { type: 'block', block: 'core/heading' },
+    ]
+  },
+
+  // --- Пример для превью ---
+  example: {
+    content: 'Это пример текстового блока. Его можно превратить в заголовок или список.',
+    variants: {
+      textAlign: 'center',
+      fontSize: 'normal'
+    },
+  },
+
+  // --- Данные по умолчанию (уже есть) ---
+  defaultData: () => ({
     type: 'core/text',
     content: 'Это простой текстовый блок. Начните вводить текст...',
-    props: { as: 'p', hasDropCap: false, anchor: '' },
+    props: { as: 'p', hasDropCap: false }, // Изменил as на 'p' по умолчанию для семантики
     variants: { textAlign: 'left', fontSize: 'normal' },
     styles: {},
-  },
+  }),
 
   supportedVariants: {
     textAlign: {
@@ -98,11 +169,54 @@ TextBlock.blockInfo = {
 
   getToolbarItems: ({ block, actions }) => {
     const { variants = {} } = block;
-    const updateVariant = (name, value) => actions.update(block.id, { variants: { ...variants, [name]: value } });
 
-    const handleFormat = (e, command) => {
-      e.preventDefault(); // Важно, чтобы блок не терял фокус
+    const createToolbarAction = (actionFn) => (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      actionFn();
+    };
+
+    const handleUpdateVariant = (name, value) => {
+      actions.update(block.id, { variants: { ...variants, [name]: value } });
+    };
+
+    const handleFormat = (command) => {
+      const blockEl = document.querySelector(`[data-block-id="${block.id}"]`);
+      if (!blockEl) return;
+
+      const selection = window.getSelection();
+      const hadUserSelection = !selection.isCollapsed && blockEl.contains(selection.anchorNode);
+
+      // --- РЕШЕНИЕ: Временно делаем блок редактируемым ---
+      const wasEditable = blockEl.contentEditable === 'true';
+      if (!wasEditable) {
+        blockEl.contentEditable = true;
+      }
+
+      // Фокусируемся на элементе, чтобы выделение работало корректно
+      blockEl.focus();
+
+      // Если не было выделения, выделяем все
+      if (!hadUserSelection) {
+        const range = document.createRange();
+        range.selectNodeContents(blockEl);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+
+      // Выполняем команду
       document.execCommand(command, false, null);
+
+      // Синхронизируем состояние
+      const newContent = blockEl.innerHTML;
+      if (newContent !== block.content) {
+        actions.update(block.id, { content: newContent });
+      }
+
+      // Возвращаем все как было
+      if (!wasEditable) {
+        blockEl.contentEditable = false;
+      }
     };
 
     const alignmentIcons = {
@@ -116,30 +230,19 @@ TextBlock.blockInfo = {
         <div className="toolbarButtonGroup">
           {TextBlock.blockInfo.supportedVariants.textAlign.options.map(opt => (
             <ToolbarButton
-              key={opt.value}
               title={opt.label}
               isActive={(variants.textAlign || 'left') === opt.value}
-              onClick={() => updateVariant('textAlign', opt.value)}
+              onClick={createToolbarAction(() => handleUpdateVariant('textAlign', opt.value))}
             >
-              {/* Используем иконку из объекта */}
               {alignmentIcons[opt.value]}
             </ToolbarButton>
           ))}
         </div>
-
         <div className="toolbarSeparator"></div>
-
         <div className="toolbarButtonGroup">
-          {/* 👇 Просто заменяем button на ToolbarButton */}
-          <ToolbarButton title="Жирный" onMouseDown={(e) => handleFormat(e, 'bold')}>
-            <b>B</b>
-          </ToolbarButton>
-          <ToolbarButton title="Курсив" onMouseDown={(e) => handleFormat(e, 'italic')}>
-            <i>I</i>
-          </ToolbarButton>
-          <ToolbarButton title="Подчеркнутый" onMouseDown={(e) => handleFormat(e, 'underline')}>
-            <u>U</u>
-          </ToolbarButton>
+          <ToolbarButton title="Жирный" onClick={createToolbarAction(() => handleFormat('bold'))}><b>B</b></ToolbarButton>
+          <ToolbarButton title="Курсив" onClick={createToolbarAction(() => handleFormat('italic'))}><i>I</i></ToolbarButton>
+          <ToolbarButton title="Подчеркнутый" onClick={createToolbarAction(() => handleFormat('underline'))}><u>U</u></ToolbarButton>
         </div>
       </>
     );
@@ -254,4 +357,4 @@ TextBlock.blockInfo = {
   },
 };
 
-export default withBlockFeatures(TextBlock, styles);
+export default withBlock(TextBlock);
