@@ -1,0 +1,14 @@
+.indicator {
+    position: fixed;
+    z-index: 10000;
+    pointer-events: none;
+    transition: all 0.05s ease; /* Чуть плавности для индикатора */
+    background-color: #3b82f6;
+    border-radius: 2px;
+}
+
+.isOverlay {
+    background-color: transparent;
+    border: 2px solid #3b82f6;
+    border-radius: 4px;
+}

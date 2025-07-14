@@ -50,6 +50,11 @@
   flex: 1; /* это важно */
 }
 
+.panelLeft {
+  width: 280px;
+  overflow: auto;
+}
+
 /* Обертка для правой колонки панелей */
 .panelsWrapper {
   background-color: #ccc;
@@ -71,14 +76,10 @@
 }
 
 /* Холст, где происходит редактирование */
-.canvasContainer { /* Добавь этот класс к контейнеру Canvas для стилизации */
+.canvasContainer {
+  /* position: relative; */
+  overflow: auto;
   flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  overflow: auto; /* Позволяет скроллить холст, если контент большой */
-  min-height: 100%;
-  height: 100%;
 }
 
 /* Непосредственно сам холст (компонент Canvas) */

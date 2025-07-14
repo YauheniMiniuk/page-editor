@@ -116,6 +116,7 @@ GalleryBlock.blockInfo = {
     isContainer: true,
     description: 'Отображает несколько изображений в виде сетки.',
     keywords: ['галерея', 'изображения', 'фотографии', 'сетка', 'grid'],
+    layoutDirection: 'row',
 
     parent: null,
     allowedBlocks: ['core/gallery-image'],

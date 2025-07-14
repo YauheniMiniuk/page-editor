@@ -22,6 +22,38 @@ export const findBlockAndParent = (blocks, id, parent = null) => {
   return null;
 };
 
+/**
+ * Рекурсивно ищет родительский блок для элемента с заданным ID.
+ *
+ * @param {Array} blocks - Массив блоков для поиска (структура с 'id' и 'children').
+ * @param {string} childId - ID дочернего элемента, родителя которого нужно найти.
+ * @returns {object|null} - Родительский блок или null, если родитель не найден.
+ */
+export const findParentBlock = (blocks, childId) => {
+  // Проходим по каждому блоку на текущем уровне вложенности.
+  for (const block of blocks) {
+    // Если у блока есть дочерние элементы, проверяем их.
+    if (block.children && block.children.length > 0) {
+      // Ищем среди прямых потомков.
+      const isDirectParent = block.children.some(child => child.id === childId);
+      if (isDirectParent) {
+        // Если нашли, то текущий блок - искомый родитель.
+        return block;
+      }
+
+      // Если среди прямых потомков не нашли, уходим вглубь рекурсии.
+      const foundParent = findParentBlock(block.children, childId);
+      if (foundParent) {
+        // Если родитель нашелся на более глубоком уровне, возвращаем его наверх.
+        return foundParent;
+      }
+    }
+  }
+
+  // Если прошли все блоки на всех уровнях и ничего не нашли.
+  return null;
+}
+
 function findListItemPathRecursive(items, targetId, path = []) {
   for (const item of items) {
     const currentPath = [...path, item];
@@ -315,15 +347,20 @@ export const outdentListItem = (blocks, currentItemId) => {
   const path = findBlockPath(blocksCopy, currentItemId);
 
   // 2. Проверяем, что элемент найден и он достаточно глубоко вложен
-  if (!path || path.length < 4) {
-    // Путь для вложенного элемента: [List, ListItem, NestedList, NestedListItem] (длина 4)
-    return blocksCopy;
+  if (!path || path.length < 3) {
+    return blocksCopy; // Невозможно уменьшить отступ
+  }
+  const grandParentItem = path[path.length - 3];
+
+  // Уменьшить отступ можно, только если наш список вложен в другой list-item.
+  // Если "дедушка" не является list-item, значит мы уже на верхнем уровне.
+  if (grandParentItem.type !== 'core/list-item') {
+    return blocksCopy; // Ничего не делаем
   }
 
   // 3. Определяем наших "игроков" по найденному пути
   const itemToMove = { ...path[path.length - 1] };
   const parentListBlock = path[path.length - 2];
-  const grandParentItem = path[path.length - 3];
 
   // 4. Находим родительский массив для grandParentItem
   const grandParentInfo = findItemAndParentArrayRecursive(blocksCopy, grandParentItem.id);

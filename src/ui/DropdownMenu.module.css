@@ -1,17 +1,13 @@
 .wrapper {
   position: relative;
-  display: flex; /* Для корректного выравнивания */
+  display: inline-block;
 }
 
-/*
- * Стилизуем кнопку-триггер так же, как и остальные кнопки в тулбаре.
- * Убираем .wrapper:hover, так как ховер теперь на самой кнопке.
- */
 .dropdownButton {
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  width: 32px; /* Фиксированный размер */
+  width: 32px;
   height: 32px;
   background: transparent;
   border: none;
@@ -19,7 +15,6 @@
   border-radius: var(--border-radius-sm);
   cursor: pointer;
   font-size: 18px;
-  line-height: 1; /* Убирает лишние отступы у символа */
   transition: var(--transition-fast);
 }
 
@@ -27,25 +22,30 @@
   background-color: var(--bg-toolbar-hover);
 }
 
-/* Само меню */
 .menu {
   position: absolute;
-  top: calc(100% + 6px); /* Уменьшили отступ */
+  top: calc(100% + 4px);
   right: 0;
-  min-width: 200px;
-  padding: 6px;
+  min-width: 160px;
+  padding: 6px 0;
   background-color: var(--bg-toolbar);
   border-radius: var(--border-radius-md);
   box-shadow: var(--shadow-popup);
-  z-index: 1010;
-  /* Убрали лишнюю рамку, тень справляется лучше */
+  border: 1px solid var(--border-color);
+  z-index: 100;
+  animation: fadeIn 0.1s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .menuItem {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 8px 10px;
+  padding: 6px 8px;
   background: transparent;
   border: none;
   border-radius: var(--border-radius-sm);
@@ -62,17 +62,13 @@
 
 .icon {
   margin-right: 10px;
-  display: inline-flex;
-  align-items: center;
   font-size: 16px;
 }
 
-/* "Опасные" действия */
 .destructive {
   color: var(--text-destructive);
 }
 
 .destructive:hover {
-  background-color: rgba(255, 92, 92, 0.1); /* Легкий красный фон при наведении */
-  color: var(--text-destructive);
+  background-color: rgba(255, 92, 92, 0.08);
 }

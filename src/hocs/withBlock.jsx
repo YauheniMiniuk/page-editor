@@ -8,14 +8,16 @@ import { useBlockManager } from '../contexts/BlockManagementContext';
 
 export const withBlock = (BlockComponent) => {
     const WrappedComponent = React.forwardRef((props, ref) => {
-        const { block, mode, isSelected, onSelect, activeId } = props;
+        const { block, mode, isSelected, onSelect, activeId, blockNodesRef, layoutDirection } = props;
         const { actions, isInlineEditing } = useBlockManager();
         const { blockInfo, blockStyles } = BlockComponent;
         const { isContainer, getToolbarItems } = blockInfo;
-
         const blockRef = useRef(null);
+
         const isEditMode = mode === 'edit';
-        const isCurrentBlockDragging = activeId === block.id;
+        const isDragging = activeId === block.id;
+
+        const isEmpty = isContainer && (!block.children || block.children.length === 0);
 
         const { attributes, listeners, setNodeRef: setDraggableNodeRef } = useDraggable({
             id: block.id,
@@ -25,15 +27,32 @@ export const withBlock = (BlockComponent) => {
 
         const { setNodeRef: setDroppableNodeRef } = useDroppable({
             id: block.id,
-            data: { isContainer, parentDirection: props.parentDirection || 'column' },
+            data: { block, isContainer, isEmpty, layoutDirection: layoutDirection || 'column' },
         });
 
         const mergeRefs = (node) => {
+            // Устанавливаем ref'ы для dnd-kit
             setDraggableNodeRef(node);
             setDroppableNodeRef(node);
+
+            // 🔥 ФИКС ТУЛБАРА: Присваиваем DOM-узел нашему внутреннему ref'у
             blockRef.current = node;
-            if (typeof ref === 'function') ref(node);
-            else if (ref) ref.current = node;
+
+            // Обновляем общую карту узлов
+            if (blockNodesRef?.current) {
+                if (node) {
+                    blockNodesRef.current.set(block.id, node);
+                } else {
+                    blockNodesRef.current.delete(block.id);
+                }
+            }
+
+            // Пробрасываем ref выше, если он есть
+            if (typeof ref === 'function') {
+                ref(node);
+            } else if (ref) {
+                ref.current = node;
+            }
         };
 
         const handleBlockClick = (e) => {
@@ -45,12 +64,13 @@ export const withBlock = (BlockComponent) => {
             getVariantClasses(block.variants, blockStyles),
             {
                 [styles.selected]: isSelected && isEditMode,
-                [styles.isDragging]: isCurrentBlockDragging,
+                [styles.isDragging]: isDragging,
             }
         );
 
         const finalStyle = {
-            opacity: isCurrentBlockDragging ? 0.5 : 1,
+            opacity: isDragging ? 0.4 : 1,
+            pointerEvents: isDragging ? 'none' : 'auto',
         };
 
         const toolbarContent = getToolbarItems?.({ block, actions }) || null;
@@ -66,7 +86,7 @@ export const withBlock = (BlockComponent) => {
                     {...props}
                     ref={mergeRefs}
                     className={finalClassName}
-                    style={finalStyle}
+                    style={{ ...props.style, ...finalStyle }}
                     {...attributes}
                     {...listeners}
                     onClick={mode === 'edit' ? handleBlockClick : undefined}

@@ -19,11 +19,12 @@
 }
 
 .listItemContent:focus {
-    outline: none;
+    outline: 2px solid rgba(59, 130, 246, 0.7);
+    outline-offset: -2px;
     border: none;
-    background-color: rgba(59, 130, 246, 0.05);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-    border-radius: 4px;
+    /* background-color: rgba(59, 130, 246, 0.05); */
+    /* box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); */
+    border-radius: 2px;
 }
 
 /* =============================================== */

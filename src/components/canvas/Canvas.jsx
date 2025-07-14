@@ -7,7 +7,7 @@ import useBlockManagement from '../../hooks/useBlockManagement';
 import { useBlockManager } from '../../contexts/BlockManagementContext';
 
 // 1. Canvas теперь просто принимает `mode` и наш единый `editorContext`
-const Canvas = ({ mode, }) => {
+const Canvas = ({ mode, blockNodesRef }) => {
   const isEditMode = mode === 'edit';
 
   // 2. Деструктурируем `blocks` и `actions` из контекста.
@@ -15,10 +15,10 @@ const Canvas = ({ mode, }) => {
   const { blocks, actions } = useBlockManager();
 
   const { isOver, setNodeRef } = useDroppable({
-      id: 'canvas-root-dropzone',
-      data: { targetId: 'root', position: 'inner', context: 'canvas' },
-      disabled: !isEditMode,
-    });
+    id: 'canvas-root-dropzone',
+    data: { targetId: 'root', isContainer: true, position: 'inner', context: 'canvas' },
+    disabled: !isEditMode,
+  });
 
   // 3. Исправляем обработчик: теперь он вызывает метод из объекта `actions`.
   const handleCanvasClick = () => {
@@ -44,6 +44,7 @@ const Canvas = ({ mode, }) => {
       ref={setNodeRef}
       className={styles.canvas}
       onClick={handleCanvasClick}
+      data-droppable-id="canvas-root-dropzone"
     >
       <AnimatePresence>
         {isBlocksArray && blocks.length > 0 ? (
@@ -55,6 +56,7 @@ const Canvas = ({ mode, }) => {
               isFirst={index === 0}
               isLast={index === blocks.length - 1}
               motionProps={motionProps}
+              blockNodesRef={blockNodesRef}
             />
           ))
         ) : (

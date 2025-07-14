@@ -83,7 +83,16 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
   }, [targetRef, selectedBlock.id, blockInfo?.index]);
 
   const toolbarContent = (
-    <div ref={toolbarRef} className={styles.toolbar} style={style} onMouseDown={(e) => e.preventDefault()}>
+    <div
+      ref={toolbarRef}
+      className={styles.toolbar}
+      style={style}
+      // onMouseDown={(e) => {
+      //   e.stopPropagation();
+      //   e.preventDefault();
+      // }}
+      onClick={(e) => e.stopPropagation()}
+    >
       {/* Ручка для перетаскивания. dnd-kit сам правильно обработает ее события. */}
       <div className={styles.dragHandle} {...dragHandleListeners}>
         <DragHandleIcon />
@@ -113,7 +122,7 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
       <div className={styles.toolbarSeparator} />
 
       {/* Оставляем обработчик только на группе с выпадающим меню */}
-      <div className={styles.toolbarButtonGroup} onMouseDown={(e) => e.stopPropagation()}>
+      <div className={styles.toolbarButtonGroup}>
         <DropdownMenu triggerContent="⋮" items={menuItems} />
       </div>
     </div>

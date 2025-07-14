@@ -4,7 +4,7 @@ import { BLOCK_COMPONENTS } from '../../utils/constants'; // Импортиру�
 
 const DragOverlayContent = ({ block }) => {
   // Находим информацию о блоке (иконку, лейбл) по его типу
-  const blockInfo = BLOCK_COMPONENTS[block?.blockInfo?.type]?.blockInfo || { icon: '❓', label: block?.blockInfo?.type };
+  const blockInfo = BLOCK_COMPONENTS[block?.type]?.blockInfo || { icon: '❓', label: block?.blockInfo?.type };
 
   return (
     <div className={styles.dragOverlay}>

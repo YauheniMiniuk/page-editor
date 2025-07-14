@@ -2,13 +2,26 @@ import React from 'react';
 import { BLOCK_COMPONENTS } from '../../utils/constants';
 import { useBlockManager } from '../../contexts/BlockManagementContext';
 
-const BlockRenderer = ({ block, mode, parentDirection = 'column', isFirst, isLast, ...rest }) => {
+const BlockRenderer = ({ block, mode, blockNodesRef, isFirst, isLast, layoutDirection = 'column', ...rest }) => {
     // Получаем activeId здесь, чтобы передать его вниз
     const { selectedBlockId, activeId, actions } = useBlockManager();
     const ComponentToRender = BLOCK_COMPONENTS[block.type];
+    const { blockInfo } = ComponentToRender || {};
 
     if (!ComponentToRender) {
         return <div>Неизвестный тип блока: {block.type}</div>;
+    }
+
+    let currentLayoutDirection = 'row'; // Значение по умолчанию
+
+    if (blockInfo?.layoutDirection) {
+        // Если layoutDirection - это функция (как у ContainerBlock), вызываем её
+        if (typeof blockInfo.layoutDirection === 'function') {
+            currentLayoutDirection = blockInfo.layoutDirection(block);
+        } else {
+            // Иначе - это строка (как у ColumnsBlock)
+            currentLayoutDirection = blockInfo.layoutDirection;
+        }
     }
 
     // Рекурсивный вызов со всеми необходимыми пропсами
@@ -17,7 +30,8 @@ const BlockRenderer = ({ block, mode, parentDirection = 'column', isFirst, isLas
             key={child.id}
             block={child}
             mode={mode}
-            parentDirection={block.variants?.direction || 'column'}
+            layoutDirection={currentLayoutDirection}
+            blockNodesRef={blockNodesRef}
             isFirst={index === 0}
             isLast={index === block.children.length - 1}
         />
@@ -30,11 +44,12 @@ const BlockRenderer = ({ block, mode, parentDirection = 'column', isFirst, isLas
             isSelected={selectedBlockId === block.id}
             activeId={activeId}
             onSelect={() => actions.select(block.id)}
-            parentDirection={parentDirection}
+            layoutDirection={currentLayoutDirection}
             isFirst={isFirst}
             isLast={isLast}
             actions={actions}
-            {...rest} 
+            blockNodesRef={blockNodesRef}
+            {...rest}
         >
             {renderedChildren}
         </ComponentToRender>

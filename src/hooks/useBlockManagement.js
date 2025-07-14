@@ -119,6 +119,7 @@ const useBlockManagement = (initialBlocks = []) => {
       setFocusRequest(null)
     },
     setInlineEditing: handleSetIsInlineEditing,
+    setOverDropZone,
 
   }), [
     handleUpdateBlock,
@@ -137,6 +138,7 @@ const useBlockManagement = (initialBlocks = []) => {
     handleTransformBlock,
     handleUpdateListItemContent,
     handleTransformBlock,
+    setOverDropZone,
   ]);
 
   return {
@@ -146,7 +148,6 @@ const useBlockManagement = (initialBlocks = []) => {
     activeDragItem,
     setActiveDragItem,
     overDropZone,
-    setOverDropZone,
     focusRequest,
     isInlineEditing,
     actions,

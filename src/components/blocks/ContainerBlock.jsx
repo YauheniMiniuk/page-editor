@@ -64,6 +64,8 @@ ContainerBlock.blockInfo = {
     description: 'Основной строительный блок для группировки и компоновки других элементов.',
     keywords: ['секция', 'обертка', 'группа', 'ряд', 'колонка', 'wrapper', 'group'],
 
+    layoutDirection: (block) => block.variants?.direction || 'column',
+
     // --- 2. Правила вложенности (уже есть) ---
     parent: null, // Может находиться где угодно
     allowedBlocks: null, // Может содержать любые блоки

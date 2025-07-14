@@ -74,6 +74,7 @@ ColumnBlock.blockInfo = {
   isContainer: true,
   parent: ['core/columns'],
   supports: { inserter: false, reusable: false },
+  layoutDirection: (block) => block.variants?.direction || 'column',
   defaultData: () => ({
     type: 'core/column',
     children: [],
@@ -127,6 +128,7 @@ ColumnsBlock.blockInfo = {
   isContainer: true,
   description: 'Разделяет контент на несколько вертикальных колонок.',
   keywords: ['сетка', 'grid', 'ряд', 'макет'],
+  layoutDirection: 'row',
 
   parent: null,
   allowedBlocks: ['core/column'],
