@@ -117,7 +117,8 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
     if (slug === 'new') {
       setIsNewPage(true);
       setPageStatus({ isLive: false, isNewPage: true });
-      actions.setBlocks([]);
+      actions.resetHistory([]);
+      setLastSavedBlocks([]);
       setIsLoading(false);
       return;
     }
@@ -223,8 +224,10 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
         }),
       });
       if (!response.ok) throw new Error('Ошибка при создании страницы');
-      await response.json();
+      const result = await response.json();
+      console.log(result);
       alert(`Страница успешно создана!`);
+      navigate(`/editor/${finalSlug}?version=${result.versionId}`, { replace: true });
       return true;
     } catch (error) {
       console.error('Не удалось создать страницу:', error);

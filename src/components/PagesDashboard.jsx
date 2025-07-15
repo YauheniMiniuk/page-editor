@@ -107,7 +107,7 @@ export default function PagesDashboard() {
     const handleDeletePage = async (slug) => {
         if (!window.confirm(`Вы уверены, что хотите удалить страницу "${slug}" и все её версии?`)) return;
         try {
-            const response = await fetch(`/api/pages/${slug}`, { method: 'DELETE' });
+            const response = await fetch(`/pages/${slug}`, { method: 'DELETE' });
             if (!response.ok) throw new Error('Error deleting page');
             setPages(pages.filter(p => p.slug !== slug));
             alert('Страница успешно удалена');
