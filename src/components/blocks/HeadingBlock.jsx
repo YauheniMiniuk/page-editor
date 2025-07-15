@@ -13,6 +13,7 @@ import ColorPicker from '../../ui/ColorPicker';
 import Select from '../../ui/Select';
 import { HeadingIcon, AlignCenterIcon, AlignLeftIcon, AlignRightIcon } from '../../utils/icons';
 import { useBlockManager } from '../../contexts/BlockManagementContext';
+import ToolbarButtonGroup from '../../ui/ToolbarButtonGroup';
 
 //================================================================================
 // 1. Компонент блока "Заголовок"
@@ -185,7 +186,7 @@ HeadingBlock.blockInfo = {
         return (
             <>
                 {/* Переключатель уровня заголовка */}
-                <div className="toolbarButtonGroup">
+                <ToolbarButtonGroup>
                     {[1, 2, 3, 4, 5, 6].map(lvl => (
                         <ToolbarButton
                             key={lvl} title={`Заголовок ${lvl}`}
@@ -193,10 +194,10 @@ HeadingBlock.blockInfo = {
                             onClick={createToolbarAction(() => updateLevel(lvl))}
                         >H{lvl}</ToolbarButton>
                     ))}
-                </div>
+                </ToolbarButtonGroup>
                 <div className="toolbarSeparator"></div>
                 {/* Переключатель выравнивания */}
-                <div className="toolbarButtonGroup">
+                <ToolbarButtonGroup>
                     {HeadingBlock.blockInfo.supportedVariants.textAlign.options.map(opt => (
                         <ToolbarButton
                             key={opt.value} title={opt.label}
@@ -204,14 +205,14 @@ HeadingBlock.blockInfo = {
                             onClick={createToolbarAction(() => updateVariant('textAlign', opt.value))}
                         >{opt.icon}</ToolbarButton>
                     ))}
-                </div>
+                </ToolbarButtonGroup>
                 <div className="toolbarSeparator"></div>
                 {/* --- ДОБАВЛЯЕМ КНОПКИ ФОРМАТИРОВАНИЯ --- */}
-                <div className="toolbarButtonGroup">
+                <ToolbarButtonGroup>
                     <ToolbarButton title="Жирный" onClick={createToolbarAction(() => handleFormat('bold'))}><b>B</b></ToolbarButton>
                     <ToolbarButton title="Курсив" onClick={createToolbarAction(() => handleFormat('italic'))}><i>I</i></ToolbarButton>
                     <ToolbarButton title="Подчеркнутый" onClick={createToolbarAction(() => handleFormat('underline'))}><u>U</u></ToolbarButton>
-                </div>
+                </ToolbarButtonGroup>
             </>
         );
     },

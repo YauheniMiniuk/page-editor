@@ -53,12 +53,13 @@
 /* --- Боковые панели --- */
 
 .panelLeft {
-  width: 280px;
+  width: 320px;
   background-color: var(--bg-canvas); /* Единый фон для панелей */
   border-left: 1px solid var(--border-color);
   border-right: 1px solid var(--border-color);
   display: flex; /* Чтобы вложенный wrapper растягивался */
   flex-direction: column;
+  flex-shrink: 0;
   overflow: hidden; /* Скрываем все, что выходит за пределы */
 }
 
@@ -72,6 +73,7 @@
   border-right: 1px solid var(--border-color);
   display: flex; /* Чтобы вложенный wrapper растягивался */
   flex-direction: column;
+  flex-shrink: 0;
   overflow: hidden; /* Скрываем все, что выходит за пределы */
 }
 

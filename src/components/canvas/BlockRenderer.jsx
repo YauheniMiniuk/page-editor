@@ -2,7 +2,7 @@ import React from 'react';
 import { BLOCK_COMPONENTS } from '../../utils/constants';
 import { useBlockManager } from '../../contexts/BlockManagementContext';
 
-const BlockRenderer = ({ block, mode, blockNodesRef, isFirst, isLast, layoutDirection = 'column', ...rest }) => {
+const BlockRenderer = ({ block, mode, blockNodesRef, layoutDirection = 'column', ...rest }) => {
     // Получаем activeId здесь, чтобы передать его вниз
     const { selectedBlockId, activeId, actions } = useBlockManager();
     const ComponentToRender = BLOCK_COMPONENTS[block.type];
@@ -32,8 +32,6 @@ const BlockRenderer = ({ block, mode, blockNodesRef, isFirst, isLast, layoutDire
             mode={mode}
             layoutDirection={currentLayoutDirection}
             blockNodesRef={blockNodesRef}
-            isFirst={index === 0}
-            isLast={index === block.children.length - 1}
         />
     ));
 
@@ -41,13 +39,7 @@ const BlockRenderer = ({ block, mode, blockNodesRef, isFirst, isLast, layoutDire
         <ComponentToRender
             block={block}
             mode={mode}
-            isSelected={selectedBlockId === block.id}
-            activeId={activeId}
-            onSelect={() => actions.select(block.id)}
             layoutDirection={currentLayoutDirection}
-            isFirst={isFirst}
-            isLast={isLast}
-            actions={actions}
             blockNodesRef={blockNodesRef}
             {...rest}
         >

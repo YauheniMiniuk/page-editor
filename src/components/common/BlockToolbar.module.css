@@ -1,6 +1,7 @@
 .toolbar {
   position: fixed;
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 4px; /* Немного увеличим отступ */
   padding: 6px;
@@ -16,6 +17,7 @@
 /* Группа кнопок больше не нуждается в собственном фоне */
 .toolbarButtonGroup {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 2px;
 }

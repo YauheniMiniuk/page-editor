@@ -27,43 +27,45 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
       label: 'Удалить блок',
       icon: '🗑️',
       onClick: () => actions.delete(selectedBlock.id),
-      isDestructive: true, // Добавим флаг для стилизации
+      isDestructive: true,
     },
-    // Сюда в будущем можно добавить "Дублировать", "Копировать стили" и т.д.
   ];
 
   const handleSwapUp = () => actions.swapBlock(selectedBlock.id, 'up');
   const handleSwapDown = () => actions.swapBlock(selectedBlock.id, 'down');
   const handleSelectParent = () => actions.select(parent.id);
-  const handleToolbarClick = (e) => e.stopPropagation();
 
   useLayoutEffect(() => {
-    if (!targetRef.current) return;
+    // Выносим узлы в переменные для чистоты
+    const targetNode = targetRef.current;
+    const toolbarNode = toolbarRef.current;
+
+    // Если одного из узлов нет, просто ничего не делаем и скрываем тулбар
+    if (!targetNode || !toolbarNode) {
+      setStyle({ opacity: 0 });
+      return;
+    }
 
     const calculatePosition = () => {
-      if (!targetRef.current || !toolbarRef.current) return;
-
-      const targetRect = targetRef.current.getBoundingClientRect();
-      const toolbarHeight = toolbarRef.current.offsetHeight;
+      const targetRect = targetNode.getBoundingClientRect();
+      const toolbarHeight = toolbarNode.offsetHeight;
       let topPosition;
-      const position = 'fixed';
 
+      // Твоя логика позиционирования остается без изменений
       const isBlockScrolledPast = targetRect.top < TOOLBAR_MARGIN;
       if (isBlockScrolledPast) {
         topPosition = TOOLBAR_MARGIN;
       } else {
         const topPositionAbove = targetRect.top - toolbarHeight - TOOLBAR_MARGIN;
-        if (topPositionAbove > 0) {
-          topPosition = topPositionAbove;
-        } else {
-          topPosition = targetRect.bottom + TOOLBAR_MARGIN;
-        }
+        topPosition = (topPositionAbove > 0)
+          ? topPositionAbove
+          : targetRect.bottom + TOOLBAR_MARGIN;
       }
 
       const leftPosition = targetRect.left + targetRect.width / 2;
 
       setStyle({
-        position,
+        position: 'fixed',
         top: `${topPosition}px`,
         left: `${leftPosition}px`,
         transform: 'translateX(-50%)',
@@ -71,16 +73,22 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
       });
     };
 
+    // Вычисляем позицию при первом рендере и при смене зависимостей
     calculatePosition();
-    // Возвращаем слушатель скролла для "живого" следования
+
+    // Добавляем слушатели для "живого" следования
     window.addEventListener('scroll', calculatePosition, true);
     window.addEventListener('resize', calculatePosition);
 
+    // Функция очистки
     return () => {
       window.removeEventListener('scroll', calculatePosition, true);
       window.removeEventListener('resize', calculatePosition);
     };
-  }, [targetRef, selectedBlock.id, blockInfo?.index]);
+  }, [
+    targetRef.current,    // <-- ГЛАВНЫЙ ФИКС: теперь эффект перезапустится, когда узел появится
+    selectedBlock.id,     // Пересчитываем позицию при выборе нового блока
+  ]);
 
   const toolbarContent = (
     <div

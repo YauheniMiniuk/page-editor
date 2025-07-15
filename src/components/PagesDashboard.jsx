@@ -85,7 +85,6 @@ export default function PagesDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [expandedPageId, setExpandedPageId] = useState(null);
     const navigate = useNavigate();
-
     const fetchPages = useCallback(async () => {
         setIsLoading(true);
         try {

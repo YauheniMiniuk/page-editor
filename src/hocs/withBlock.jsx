@@ -8,15 +8,18 @@ import { useBlockManager } from '../contexts/BlockManagementContext';
 
 export const withBlock = (BlockComponent) => {
     const WrappedComponent = React.forwardRef((props, ref) => {
-        const { block, mode, isSelected, onSelect, activeId, blockNodesRef, layoutDirection } = props;
-        const { actions, isInlineEditing } = useBlockManager();
+        // --- Получаем всё из одного места ---
+        const { block, mode, blockNodesRef, layoutDirection } = props;
+        const { actions, isInlineEditing, activeId, selectedBlockId } = useBlockManager();
+
+        // --- Вычисляем состояния прямо здесь ---
+        const isSelected = selectedBlockId === block.id;
+        const isEditMode = mode === 'edit';
+        
         const { blockInfo, blockStyles } = BlockComponent;
         const { isContainer, getToolbarItems } = blockInfo;
         const blockRef = useRef(null);
-
-        const isEditMode = mode === 'edit';
         const isDragging = activeId === block.id;
-
         const isEmpty = isContainer && (!block.children || block.children.length === 0);
 
         const { attributes, listeners, setNodeRef: setDraggableNodeRef } = useDraggable({
@@ -31,33 +34,22 @@ export const withBlock = (BlockComponent) => {
         });
 
         const mergeRefs = (node) => {
-            // Устанавливаем ref'ы для dnd-kit
             setDraggableNodeRef(node);
             setDroppableNodeRef(node);
-
-            // 🔥 ФИКС ТУЛБАРА: Присваиваем DOM-узел нашему внутреннему ref'у
             blockRef.current = node;
 
-            // Обновляем общую карту узлов
             if (blockNodesRef?.current) {
-                if (node) {
-                    blockNodesRef.current.set(block.id, node);
-                } else {
-                    blockNodesRef.current.delete(block.id);
-                }
+                if (node) blockNodesRef.current.set(block.id, node);
+                else blockNodesRef.current.delete(block.id);
             }
-
-            // Пробрасываем ref выше, если он есть
-            if (typeof ref === 'function') {
-                ref(node);
-            } else if (ref) {
-                ref.current = node;
-            }
+            if (typeof ref === 'function') ref(node);
+            else if (ref) ref.current = node;
         };
 
+        // --- Обработчик теперь использует actions напрямую ---
         const handleBlockClick = (e) => {
             e.stopPropagation();
-            onSelect();
+            actions.select(block.id);
         };
 
         const finalClassName = classNames(
@@ -84,7 +76,9 @@ export const withBlock = (BlockComponent) => {
                 )}
                 <BlockComponent
                     {...props}
+                    actions={actions}
                     ref={mergeRefs}
+                    isSelected={isSelected}
                     className={finalClassName}
                     style={{ ...props.style, ...finalStyle }}
                     {...attributes}
