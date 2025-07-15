@@ -18,7 +18,7 @@ import { useDebouncedCallback } from 'use-debounce';
 
 import styles from './DndCanvasBuilder.module.css';
 import { BLOCK_TYPES, AVAILABLE_BLOCKS, BLOCK_COMPONENTS } from '../utils/constants';
-import { findBlockAndParent, generatePreviewLayout, insertBlockRecursive, isAncestor, removeBlockRecursive } from '../utils/blockUtils';
+import { findBlockAndParent, generatePreviewLayout, insertBlockRecursive, isAncestor, moveBlock, removeBlockRecursive } from '../utils/blockUtils';
 import useBlockManagement from '../hooks/useBlockManagement';
 
 import SidebarElements from './sidebar/SidebarElements';
@@ -91,11 +91,15 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
   const location = useLocation();
 
   // Получаем состояние и единый объект `actions` из нашего хука
-  const { blocks, selectedBlockId, activeId, focusRequest, actions } = useBlockManager();
+  const { blocks, selectedBlockId, activeId, focusRequest, actions, canUndo, canRedo } = useBlockManager();
+  const [lastSavedBlocks, setLastSavedBlocks] = useState(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isNewPage, setIsNewPage] = useState(false);
   const [pageTitle, setPageTitle] = useState('Новая страница');
   const [mode, setMode] = useState(initialMode);
+
+  const [pageStatus, setPageStatus] = useState({ isLive: false, isNewPage: false });
 
   const [activeLeftPanel, setActiveLeftPanel] = useState(null);
   const [panelContent, setPanelContent] = useState(null);
@@ -105,12 +109,14 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
   const [dropIndicator, setDropIndicator] = useState(null);
 
   const blockNodesRef = useRef(new Map());
+  const structureNodesRef = useRef(new Map());
 
   const isEditMode = mode === 'edit';
 
   useEffect(() => {
     if (slug === 'new') {
       setIsNewPage(true);
+      setPageStatus({ isLive: false, isNewPage: true });
       actions.setBlocks([]);
       setIsLoading(false);
       return;
@@ -140,8 +146,8 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
       setIsLoading(true);
       try {
         const apiUrl = versionId
-          ? `http://localhost:3001/pages/${slug}?mode=${mode}&version=${versionId}`
-          : `http://localhost:3001/pages/${slug}?mode=${mode}`;
+          ? `/pages/${slug}?mode=${mode}&version=${versionId}`
+          : `/pages/${slug}?mode=${mode}`;
 
         const response = await fetch(apiUrl);
         if (!response.ok) {
@@ -153,6 +159,11 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
         setIsNewPage(false);
         setPageTitle(page.title);
 
+        setPageStatus({
+          isLive: page.live_version_id === version?.id,
+          isNewPage: false,
+        });
+
         let contentBlocks = [];
         if (version && version.content) {
           const initialParsed = typeof version.content === 'string'
@@ -160,7 +171,9 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
             : version.content;
           contentBlocks = deepParseBlocks(initialParsed);
         }
-        actions.setBlocks(Array.isArray(contentBlocks) ? contentBlocks : []);
+        const newInitialState = Array.isArray(contentBlocks) ? contentBlocks : [];
+        actions.resetHistory(newInitialState); // ...мы сбрасываем историю на это состояние
+        setLastSavedBlocks(newInitialState);
       } catch (error) {
         console.error("Ошибка загрузки страницы:", error.message);
         actions.setBlocks([]);
@@ -198,7 +211,7 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
     if (!finalSlug) return alert("Slug обязателен.");
 
     try {
-      const response = await fetch(`http://localhost:3001/pages`, {
+      const response = await fetch(`/pages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -212,16 +225,17 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
       if (!response.ok) throw new Error('Ошибка при создании страницы');
       await response.json();
       alert(`Страница успешно создана!`);
-      navigate(`/editor/${finalSlug}`, { replace: true });
+      return true;
     } catch (error) {
       console.error('Не удалось создать страницу:', error);
       alert('Произошла ошибка при создании страницы.');
+      return false;
     }
   };
 
   const handleCreateNewVersion = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/pages/${slug}/versions`, {
+      const response = await fetch(`/pages/${slug}/versions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -233,17 +247,46 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
       if (!response.ok) throw new Error('Ошибка сохранения');
       const result = await response.json();
       alert(`Новый черновик сохранен! ID версии: ${result.versionId}`);
+      navigate(`/editor/${slug}?version=${result.versionId}`, { replace: true });
+      return true;
     } catch (error) {
       console.error('Не удалось сохранить страницу:', error);
       alert('Произошла ошибка при сохранении.');
+      return false;
     }
   };
 
   const handleSave = () => {
-    if (isNewPage) {
-      handleCreateNewPage();
-    } else {
-      handleCreateNewVersion();
+    const saveAction = isNewPage ? handleCreateNewPage : handleCreateNewVersion;
+    saveAction().then(success => {
+      if (success) {
+        setLastSavedBlocks(blocks);
+      }
+    });
+  };
+
+  const handlePublish = async () => {
+    if (pageStatus.isNewPage || !slug || !versionId) {
+      alert('Сначала сохраните страницу как черновик.');
+      return;
+    }
+
+    if (window.confirm(`Опубликовать эту версию? Она станет видна всем пользователям.`)) {
+      try {
+        const response = await fetch(`/pages/${slug}/versions/${versionId}/publish`, {
+          method: 'PUT',
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Ошибка публикации');
+        }
+        alert('Версия успешно опубликована!');
+        // Обновляем статус в UI
+        setPageStatus(prev => ({ ...prev, isLive: true }));
+      } catch (error) {
+        console.error('Не удалось опубликовать версию:', error);
+        alert(`Ошибка: ${error.message}`);
+      }
     }
   };
 
@@ -283,6 +326,33 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
     setPropertiesPanelVisible(prev => !prev);
   };
 
+  const isDirty = useMemo(() => {
+    // Если еще не загрузили данные, считаем, что изменений нет
+    if (lastSavedBlocks === null) return false;
+    // Сравниваем строковые представления состояний
+    return JSON.stringify(blocks) !== JSON.stringify(lastSavedBlocks);
+  }, [blocks, lastSavedBlocks]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.ctrlKey || event.metaKey) {
+        // --- ИЗМЕНЕНИЯ ЗДЕСЬ ---
+        if (event.code === 'KeyZ') { // Было: event.key === 'z'
+          event.preventDefault();
+          actions.undo();
+        } else if (event.code === 'KeyY') { // Было: event.key === 'y'
+          event.preventDefault();
+          actions.redo();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [actions]);
+
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 10 } }));
   const selectedBlock = useMemo(() => findBlockAndParent(blocks, selectedBlockId)?.block || null, [blocks, selectedBlockId]);
 
@@ -317,13 +387,88 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
     actions.setActiveId(active.id);
     actions.setInlineEditing(false);
     actions.setOverDropZone(null);
+    setDropIndicator(null);
   };
 
   const handleDragMove = useCallback((event) => {
-    const { active, over } = event;
+    const { active, over, activatorEvent } = event;
+
+    // Сбрасываем индикатор перед каждым вычислением
     setDropIndicator(null);
 
-    if (!over || !active.rect.current.translated || active.id === over.id) {
+    // Если нет цели для сброса или тащим на себя, выходим
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const isStructureDrag = active.data.current?.context === 'structure';
+
+    const activeContext = active.data.current?.context;
+    const overContext = over.data.current?.context;
+
+    // --- ЛОГИКА ДЛЯ ПАНЕЛИ СТРУКТУРЫ ---
+    if (isStructureDrag) {
+      const overId = over.id; // 'structure-...' или 'structure-root'
+      const overContext = over.data.current?.context;
+
+      // Нельзя бросать на себя (даже если ID с префиксом)
+      if (active.id === over.id) return;
+
+      // Сценарий 1: Перетаскиваем над корневой зоной панели
+      if (overContext === 'structure-root') {
+        setDropIndicator({
+          targetId: 'structure-root',
+          position: 'bottom',
+          context: 'structure',
+        });
+        return;
+      }
+
+      // Сценарий 2: Перетаскиваем над другим элементом структуры
+      if (overContext === 'structure') {
+        const overNode = structureNodesRef.current.get(over.id.replace('structure-', ''));
+        if (!overNode) return;
+
+        const realActiveId = active.data.current.blockId;
+        const realOverId = over.data.current.blockId;
+
+        const overBlock = over.data.current.block;
+        if (isAncestor(active.data.current.block, overBlock)) return;
+
+        const overNodeRect = overNode.getBoundingClientRect();
+        const relativeY = activatorEvent.clientY - overNodeRect.top;
+        const height = overNodeRect.height;
+
+        const isContainer = BLOCK_COMPONENTS[overBlock.type]?.blockInfo.isContainer;
+        const thresholdInner = isContainer ? 0.25 : 0; // 25% высоты сверху/снизу для вложения, если это контейнер
+
+        let position;
+        if (relativeY < height * thresholdInner) {
+          position = 'top';
+        } else if (relativeY > height * (1 - thresholdInner)) {
+          position = 'bottom';
+        } else if (isContainer) {
+          position = 'inner';
+        } else {
+          // Если не контейнер, то делим пополам
+          position = relativeY < height / 2 ? 'top' : 'bottom';
+        }
+
+        setDropIndicator({
+          targetId: realOverId,
+          position,
+          context: 'structure',
+        });
+      }
+      return; // Важно! Прерываем выполнение, чтобы не сработала логика канваса.
+    }
+
+
+    // --- ЛОГИКА ДЛЯ КАНВАСА (ТВОЙ ОРИГИНАЛЬНЫЙ КОД) ---
+    // Не позволяем тащить из структуры на канвас (это можно будет реализовать позже)
+    if (activeContext === 'structure') return;
+
+    if (!active.rect.current.translated) {
       return;
     }
 
@@ -345,14 +490,12 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
     } else {
       const found = findBlockAndParent(blocks, overId);
       if (!found) return;
-      // Если у блока нет родителя, значит, контейнер - root
       container = overData.isContainer ? found.block : (found.parent || { id: 'root', type: 'core/root' });
       children = container.id === 'root' ? blocks : container.children || [];
     }
 
     // --- ШАГ 3: Валидация ---
     let { blockInfo: containerInfo } = BLOCK_COMPONENTS[container.type] || {};
-
     if (containerInfo?.allowedBlocks && !containerInfo.allowedBlocks.includes(draggedBlockType)) return;
     if (draggedBlockInfo?.parent && !draggedBlockInfo.parent.includes(container.type)) return;
 
@@ -361,34 +504,29 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
       : blockNodesRef.current.get(container.id);
     if (!containerNode) return;
 
-
-    // --- ШАГ 4: Логика индикатора ---
+    // --- ШАГ 4: Логика индикатора на канвасе ---
     const filteredChildren = children.filter(child => child.id !== active.id);
     const isEmpty = filteredChildren.length === 0;
 
-    // --- Сценарий A: Контейнер пуст ---
     if (isEmpty) {
       setDropIndicator({
         rect: containerNode.getBoundingClientRect(),
         position: 'inner',
         targetId: container.id,
         isOverlay: true,
+        context: 'canvas', // <-- Добавляем контекст
       });
       return;
     }
 
-    // --- Сценарий B: Контейнер не пуст, ищем "щель" ---
     const activeNodeRect = active.rect.current.translated;
-    let layoutDirection = 'column'; // Значение по умолчанию
+    let layoutDirection = 'column';
     if (containerInfo && containerInfo.layoutDirection) {
-      if (typeof containerInfo.layoutDirection === 'function') {
-        // Для динамических контейнеров, например 'core/container'
-        layoutDirection = containerInfo.layoutDirection(container);
-      } else {
-        // Для статических контейнеров, например 'core/columns'
-        layoutDirection = containerInfo.layoutDirection;
-      }
+      layoutDirection = typeof containerInfo.layoutDirection === 'function'
+        ? containerInfo.layoutDirection(container)
+        : containerInfo.layoutDirection;
     }
+
     let closest = { distance: Infinity, targetId: null, position: null };
 
     if (layoutDirection === 'column') {
@@ -447,7 +585,6 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
 
     if (!closest.targetId) return;
 
-    // Рисуем индикатор
     const targetNode = blockNodesRef.current.get(closest.targetId);
     if (!targetNode) return;
     const targetRect = targetNode.getBoundingClientRect();
@@ -464,15 +601,44 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
       indicatorRect = { left: targetRect.right - lineThickness / 2, top: targetRect.top, height: targetRect.height, width: lineThickness };
     }
 
-    setDropIndicator({ rect: indicatorRect, ...closest });
+    setDropIndicator({ rect: indicatorRect, ...closest, context: 'canvas' }); // <-- Добавляем контекст
+  }, [blocks, actions]);
 
-  }, [blocks]);
-
-  const handleDragEnd = ({ active }) => {
-    const { position, targetId } = dropIndicator || {};
+  const handleDragEnd = ({ active, over }) => {
+    const indicator = dropIndicator; // Копируем состояние
     actions.setActiveId(null);
     setDropIndicator(null);
-    if (!position || !targetId || !active.data.current) return;
+
+    if (!indicator || !over) return;
+
+    // --- ЛОГИКА ЗАВЕРШЕНИЯ ДЛЯ ПАНЕЛИ СТРУКТУРЫ ---
+    if (indicator.context === 'structure') {
+      const activeId = active.data.current.blockId; // реальный ID блока
+      let targetId = indicator.targetId;
+
+      // Если цель - корень панели, используем специальный маркер
+      if (targetId === 'structure-root') {
+        targetId = 'root';
+      }
+
+      const { position } = indicator;
+
+      // Нельзя бросать блок на самого себя
+      if (activeId === targetId && position === 'inner') return;
+
+      const newBlocks = moveBlock(blocks, activeId, targetId, position);
+
+      if (newBlocks) {
+        actions.setBlocks(newBlocks);
+        actions.select(activeId); // Выделяем перемещенный блок для удобства
+      }
+      return; // Важно! Прерываем выполнение
+    }
+
+    // --- СТАРАЯ ЛОГИКА ЗАВЕРШЕНИЯ ДЛЯ КАНВАСА ---
+    // Тут твой существующий код для handleDragEnd, который работает с канвасом
+    const { position, targetId } = indicator;
+    if (!position || !targetId) return;
 
     let blockToInsert;
     const isNewBlock = active.data.current.isSidebarItem;
@@ -513,6 +679,13 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
         onToggleLeftPanel={handleToggleLeftPanel}
         isPropertiesVisible={isPropertiesPanelVisible}
         onTogglePropertiesPanel={handleTogglePropertiesPanel}
+        pageStatus={pageStatus}
+        onPublish={handlePublish}
+        isSaveDisabled={!isDirty}
+        onUndo={actions.undo}
+        onRedo={actions.redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
       />
       <main className={styles.mainContent}>
         <AnimatePresence>
@@ -522,14 +695,19 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
               key={activeLeftPanel}
               className={styles.panelLeft}
               initial={{ width: 0, x: '-100%' }}
-              animate={{ width: 280, x: 0 }}
+              animate={{ width: 320, x: 0 }}
               exit={{ width: 0, x: '-100%' }}
               transition={{ type: 'tween', ease: 'easeInOut', duration: 0.3 }}
             >
               <div className={styles.panelContentWrapper}>
                 {/* А контент управляется `panelContent` */}
                 {panelContent === 'elements' && <SidebarElements />}
-                {panelContent === 'structure' && <StructurePanel blocks={blocks} onSelect={actions.select} selectedId={selectedBlockId} />}
+                {panelContent === 'structure' && (
+                  <StructurePanel
+                    structureNodesRef={structureNodesRef}
+                    dropIndicator={dropIndicator}
+                  />
+                )}
               </div>
             </motion.aside>
           )}
@@ -545,7 +723,7 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
               key="right-panel"
               className={styles.panelRight}
               initial={{ width: 0, x: '100%' }}
-              animate={{ width: 280, x: 0 }}
+              animate={{ width: 400, x: 0 }}
               exit={{ width: 0, x: '100%' }}
               transition={{ type: 'tween', ease: 'easeInOut', duration: 0.3 }}
             >
@@ -572,7 +750,7 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
         {builderContent}
 
         <DragOverlay modifiers={[snapTopLeftToCursor]}>{activeBlock ? <DragOverlayContent block={activeBlock} /> : null}</DragOverlay>
-        {dropIndicator && ReactDOM.createPortal(
+        {dropIndicator && dropIndicator.rect && ReactDOM.createPortal(
           <DropIndicator
             rect={dropIndicator.rect}
             isOverlay={dropIndicator.position === 'inner'}

@@ -415,3 +415,66 @@ export const transformBlock = (blocks, blockId, newType) => {
   // Примечание: это очень простая трансформация, она не сохраняет контент.
   // Для более сложных случаев понадобится логика из `blockInfo.transforms`.
 };
+
+/**
+ * Перемещает блок в новую позицию относительно другого блока.
+ * @param {Array} blocks - Текущее дерево блоков.
+ * @param {string} activeId - ID перемещаемого блока.
+ * @param {string} targetId - ID целевого блока.
+ * @param {'top'|'bottom'|'inner'} position - Позиция для вставки.
+ * @returns {Array|null} - Новое дерево блоков или null, если перемещение невозможно.
+ */
+export const moveBlock = (blocks, activeId, targetId, position) => {
+  // Если цель - 'root', значит, вставляем в конец корневого массива
+  if (targetId === 'root') {
+    const { block: activeBlock } = findBlockAndParent(blocks, activeId) || {};
+    if (!activeBlock) return null;
+    const newTree = removeBlockRecursive(blocks, activeId);
+    newTree.push(activeBlock);
+    return newTree;
+  }
+
+  const { block: activeBlock } = findBlockAndParent(blocks, activeId) || {};
+  if (!activeBlock) return null;
+
+  if (isAncestor(activeBlock, { id: targetId })) {
+    console.warn("Циклическая зависимость: нельзя переместить родителя в потомка.");
+    return null;
+  }
+
+  // 1. Сначала удаляем активный блок из дерева
+  const treeWithoutActive = removeBlockRecursive(blocks, activeId);
+
+  // 2. Рекурсивно ищем, куда вставить
+  const insert = (nodes) => {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (node.id === targetId) {
+        if (position === 'inner') {
+          // Вкладываем внутрь
+          node.children = node.children || [];
+          node.children.push(activeBlock);
+        } else if (position === 'top') {
+          // Вставляем перед целью
+          nodes.splice(i, 0, activeBlock);
+        } else { // 'bottom'
+          // Вставляем после цели
+          nodes.splice(i + 1, 0, activeBlock);
+        }
+        return nodes; // Возвращаем измененный массив
+      }
+
+      if (node.children) {
+        const newChildren = insert(node.children);
+        // Если дочерние элементы были изменены, обновляем их
+        if (newChildren !== node.children) {
+          node.children = newChildren;
+          return nodes; // Возвращаем родительский массив, так как вставка произошла
+        }
+      }
+    }
+    return nodes; // Возвращаем массив без изменений, если цель не найдена на этом уровне
+  };
+
+  return insert([...treeWithoutActive]);
+};

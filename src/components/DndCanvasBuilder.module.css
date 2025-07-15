@@ -1,7 +1,6 @@
 :root {
   /* 🎨 Основная палитра (светлая тема) */
   --bg-main: #f7f8fa;
-  --bg-sidebar: #ccc;
   --bg-canvas: #ffffff;
   --bg-toolbar: var(--bg-canvas);
   --bg-hover: #f1f1f4;
@@ -12,19 +11,17 @@
   --accent-primary-subtle-bg: #eef2ff;
   --accent-destructive: #e11d48;
   
-  /* 📄 Текст и Разделители (Контент) */
-  --content-text-primary: #1a1a1a;  /* Основной текст на холсте */
-  --content-text-secondary: #6b7280; /* Второстепенный текст на холсте */
+  /* 📄 Текст и Разделители */
+  --content-text-primary: #1a1a1a;
+  --content-text-secondary: #6b7280;
   
-  /* ====================================================== */
-  /* ⚙️ Текст и иконки (Интерфейс: тулбар, меню, кнопки) */
-  --ui-text-primary: #374151;      /* Новый: для основного текста и иконок в UI */
-  --ui-text-secondary: #9ca3af;    /* Новый: для неактивных/отключенных элементов UI */
-  --ui-text-accent: var(--accent-primary); /* Текст акцентного цвета */
+  /* ⚙️ Текст и иконки (Интерфейс) */
+  --ui-text-primary: #374151;
+  --ui-text-secondary: #9ca3af;
+  --ui-text-accent: var(--accent-primary);
   --text-on-accent: #ffffff;
-  /* ====================================================== */
   
-  --border-color: rgb(0, 0, 0, 0.2);
+  --border-color: rgb(0 0 0 / 0.1); /* Сделал чуть менее заметным */
   
   /* 📐 Размеры */
   --border-radius-sm: 4px;
@@ -37,58 +34,66 @@
   --transition-fast: all 0.15s ease;
 }
 
+/* --- Основная сетка приложения --- */
+
 .builderLayout {
   height: 100svh;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-main); /* Зададим фон всему приложению */
 }
 
 .mainContent {
   display: flex;
   flex-direction: row;
   overflow: hidden;
-  flex: 1; /* это важно */
+  flex-grow: 1; /* Занимает всю оставшуюся высоту */
 }
+
+/* --- Боковые панели --- */
 
 .panelLeft {
   width: 280px;
-  overflow: auto;
+  background-color: var(--bg-canvas); /* Единый фон для панелей */
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  display: flex; /* Чтобы вложенный wrapper растягивался */
+  flex-direction: column;
+  overflow: hidden; /* Скрываем все, что выходит за пределы */
 }
 
-/* Обертка для правой колонки панелей */
-.panelsWrapper {
-  background-color: #ccc;
-  width: 280px;
-  flex-shrink: 0;
+.panelLeft {
+    border-right: none; /* У левой панели нет правой границы */
+}
+
+.panelRight {
+  background-color: var(--bg-canvas); /* Единый фон для панелей */
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  display: flex; /* Чтобы вложенный wrapper растягивался */
+  flex-direction: column;
+  overflow: hidden; /* Скрываем все, что выходит за пределы */
+}
+
+.panelRight {
+    border-left: none; /* У правой панели нет левой границы */
+}
+
+/* Обёртка для контента внутри анимированных панелей */
+.panelContentWrapper {
+    padding: 12px;
+    overflow-y: auto; /* Прокрутка для контента, а не для всей панели */
+    height: 100%;
+}
+
+
+/* --- Центральная область с холстом --- */
+
+.canvasContainer {
+  overflow: auto; /* Позволяет скроллить холст, если он не помещается */
+  flex-grow: 1;
+  padding: 24px; /* Добавим отступы вокруг холста */
   display: flex;
   flex-direction: column;
-  gap: 24px; /* Пространство между панелью свойств и панелью структуры */
-}
-
-/* Стилизуем сами панели (PropertiesPanel, StructurePanel) 
-   Предположим, что у них есть общий класс .panel или можно стилизовать их контейнеры */
-.panelsWrapper > div { /* Стилизуем дочерние div (PropertiesPanel, StructurePanel) */
-  background-color: var(--sidebar-bg);
-  border-radius: 12px;
-  padding: 20px;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-}
-
-/* Холст, где происходит редактирование */
-.canvasContainer {
-  /* position: relative; */
-  overflow: auto;
-  flex: 1;
-}
-
-/* Непосредственно сам холст (компонент Canvas) */
-.Canvas {
-  width: 100%;
-  max-width: 800px; /* Ограничиваем ширину для лучшей читаемости контента */
-  background-color: var(--canvas-bg);
-  border-radius: 8px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-color);
-  /* Дальнейшие стили для самого холста */
+  align-items: center; /* Центрируем холст по горизонтали */
 }

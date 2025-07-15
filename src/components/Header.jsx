@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './Header.module.css';
-import { Eye, Code, PanelLeft, PanelRight, Settings } from 'lucide-react'; // Иконки для кнопок
+import { Eye, Code, PanelLeft, PanelRight, Settings, UploadCloud, Undo2, Redo2 } from 'lucide-react'; // Иконки для кнопок
 
 const Header = ({
   isEditMode,
@@ -10,7 +10,14 @@ const Header = ({
   activeLeftPanel,
   onToggleLeftPanel,
   isPropertiesVisible,
-  onTogglePropertiesPanel
+  onTogglePropertiesPanel,
+  pageStatus,
+  onPublish,
+  isSaveDisabled,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo
 }) => {
   return (
     <header className={styles.header}>
@@ -40,6 +47,17 @@ const Header = ({
 
       {/* ЦЕНТРАЛЬНАЯ СЕКЦИЯ: Переключатель режима */}
       <div className={styles.centerSection}>
+        {isEditMode && (
+          <>
+            <button className={styles.iconButton} title="Отменить (Ctrl+Z)" onClick={onUndo} disabled={!canUndo}>
+              <Undo2 size={18} />
+            </button>
+            <button className={styles.iconButton} title="Повторить (Ctrl+Y)" onClick={onRedo} disabled={!canRedo}>
+              <Redo2 size={18} />
+            </button>
+            <div className={styles.separator} />
+          </>
+        )}
         <button
           className={`${styles.modeToggle} ${isEditMode ? styles.active : ''}`}
           onClick={onToggleMode}
@@ -70,7 +88,26 @@ const Header = ({
               <Settings size={18} />
             </button>
             <div className={styles.separator}></div>
-            <button onClick={onSave} className={styles.saveButton}>Сохранить</button>
+
+            {/* --- НОВЫЙ БЛОК ПУБЛИКАЦИИ --- */}
+            {!pageStatus.isNewPage && (
+              pageStatus.isLive ? (
+                <div className={styles.statusIndicator}>
+                  <span className={styles.liveDot}></span>
+                  Опубликовано
+                </div>
+              ) : (
+                <button onClick={onPublish} className={styles.publishButton}>
+                  <UploadCloud size={16} />
+                  <span>Опубликовать</span>
+                </button>
+              )
+            )}
+            {/* --- КОНЕЦ НОВОГО БЛОКА --- */}
+
+            <button onClick={onSave} className={styles.saveButton} disabled={isSaveDisabled}>
+              Сохранить
+            </button>
           </>
         )}
       </div>

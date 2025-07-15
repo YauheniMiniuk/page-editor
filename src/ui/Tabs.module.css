@@ -4,6 +4,8 @@
 
 .tabHeaders {
   display: flex;
+  flex-direction: row;
+  overflow: auto;
   border-bottom: 1px solid #dee2e6; /* Более мягкий цвет границы */
   margin-bottom: -1px; /* Технический прием для красивого перекрытия границ */
 }

@@ -1,93 +1,117 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
+import classNames from 'classnames';
 import styles from './StructurePanel.module.css';
-import { BLOCK_COMPONENTS } from '../../utils/constants'; // Нам нужны иконки и лейблы
+import { BLOCK_COMPONENTS } from '../../utils/constants';
 import DropdownMenu from '../../ui/DropdownMenu';
-import { useBlockManager } from '../../contexts/BlockManagementContext';
 
 const StructureItem = ({
     block,
     level,
-    expandedIds,
     onSelect,
     selectedId,
     onToggleExpand,
-    actions
+    expandedIds,
+    actions,
+    // --- Новые пропсы ---
+    structureNodesRef,
+    dropIndicator,
 }) => {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    const { overDropZone, activeDragItem } = useBlockManager();
     const { id, type, children } = block;
-    const isExpanded = !!expandedIds[block.id];
+    const isExpanded = !!expandedIds[id];
     const hasChildren = children?.length > 0;
-    const canHaveChildren = !!BLOCK_COMPONENTS[type]?.blockInfo?.isContainer;
+    const { blockInfo } = BLOCK_COMPONENTS[type] || {};
+    const canHaveChildren = !!blockInfo?.isContainer;
 
-    const overId = overDropZone?.id;
-    const isDropTargetBefore = overId === `structure-${id}-top`;
-    const isDropTargetAfter = overId === `structure-${id}-bottom`;
-    const isDropTargetInner = overId === `structure-${id}-inner`;
+    // --- Регистрируем DOM-узел ---
+    const nodeRef = useRef(null);
+    useEffect(() => {
+        if (nodeRef.current) {
+            structureNodesRef.current.set(id, nodeRef.current);
+        }
+        return () => {
+            structureNodesRef.current.delete(id);
+        };
+    }, [id, structureNodesRef]);
 
-    const wrapperClasses = [
-        styles.itemWrapper,
-        isDropTargetBefore ? styles.dropTargetBefore : '',
-        isDropTargetAfter ? styles.dropTargetAfter : '',
-    ].filter(Boolean).join(' ');
+    const structureId = `structure-${id}`;
 
-    const itemClasses = [
-        styles.structureItem,
-        id === selectedId ? styles.itemSelected : '',
-        isDropTargetInner ? styles.innerDropHighlight : '',
-    ].filter(Boolean).join(' ');
-
-    // Получаем иконку и лейбл из нашего конфига блоков
-    const blockInfo = BLOCK_COMPONENTS[type]?.blockInfo || { icon: '❓', label: type };
-
-    const { attributes, listeners, setNodeRef: draggableRef } = useDraggable({
-        id: `structure-${id}`,
-        data: { block, isStructureItem: true, context: 'structure' },
+    // --- Логика Draggable ---
+    const { attributes, listeners, setNodeRef: draggableRef, isDragging } = useDraggable({
+        id: structureId, // Используем чистый ID блока
+        data: { blockId: id, block, context: 'structure' },
     });
 
-    const { setNodeRef: dropTopRef } = useDroppable({
-        id: `structure-${id}-top`,
-        data: { targetId: id, position: 'top', context: 'structure' }
+    // --- Логика Droppable (ОДИН на весь элемент) ---
+    const { setNodeRef: droppableRef } = useDroppable({
+        id: structureId,
+        data: { blockId: id, block, context: 'structure' },
     });
-    const { setNodeRef: dropBottomRef } = useDroppable({
-        id: `structure-${id}-bottom`,
-        data: { targetId: id, position: 'bottom', context: 'structure' }
+
+    // --- Объединяем ref'ы ---
+    const setCombinedRef = (node) => {
+        nodeRef.current = node;
+        draggableRef(node);
+        droppableRef(node);
+    };
+
+    // --- Стилизация на основе dropIndicator ---
+    const isTarget = dropIndicator?.targetId === id;
+    const wrapperClasses = classNames(styles.itemWrapper, {
+        [styles.dropTargetBefore]: isTarget && dropIndicator.position === 'top',
+        [styles.dropTargetAfter]: isTarget && dropIndicator.position === 'bottom',
+        [styles.dragging]: isDragging,
+        [styles.isSelectedWrapper]: id === selectedId,
     });
-    const { setNodeRef: dropInnerRef } = useDroppable({
-        id: `structure-${id}-inner`,
-        data: { targetId: id, position: 'inner', context: 'structure' },
-        disabled: !canHaveChildren,
+
+    const itemClasses = classNames(styles.structureItem, {
+        [styles.itemSelected]: id === selectedId,
+        [styles.innerDropHighlight]: dropIndicator?.targetId === id && dropIndicator.position === 'inner',
     });
 
     const menuItems = [
         { label: 'Удалить блок', icon: '🗑️', onClick: () => actions.delete(id), isDestructive: true },
-        // Сюда можно добавить "Дублировать" и т.д.
     ];
 
     return (
-        <li className={wrapperClasses} style={{ '--indent-size': `${level * 20}px` }}>
-            <div ref={dropTopRef} className={styles.dropZoneTop} />
-            <div ref={draggableRef} className={itemClasses}>
-                <div className={styles.itemContent} style={{ paddingLeft: 'var(--indent-size)' }} onClick={() => onSelect(id)}>
+        <li
+            ref={setCombinedRef}
+            className={wrapperClasses}
+            style={{ '--indent-size': `${level * 20}px`, opacity: isDragging ? 0.4 : 1 }}
+        >
+            <div className={itemClasses}>
+                <div className={styles.itemContent} onClick={() => onSelect(id)}>
                     {canHaveChildren && (
-                        <button className={styles.toggleButton} onClick={(e) => { e.stopPropagation(); onToggleExpand(id); }}>
-                            {isExpanded ? '▼' : '►'}
+                        <button
+                            className={styles.toggleButton}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleExpand(id);
+                            }}
+                        >
+                            {hasChildren ? (isExpanded ? '▼' : '►') : <span style={{ display: 'inline-block', width: '1em' }}></span>}
                         </button>
                     )}
-                    <span className={styles.itemIcon}>{blockInfo.icon}</span>
-                    <span className={styles.itemLabel}>{blockInfo.label}</span>
+                    <span className={styles.itemIcon}>{blockInfo?.icon || '❓'}</span>
+                    <span className={styles.itemLabel}>{blockInfo?.label || type}</span>
                 </div>
-                <div className={styles.itemActions} onClick={e => e.stopPropagation()}>
-                    <DropdownMenu items={menuItems} triggerContent="⋮" />
-                    <div className={styles.dragHandle} {...attributes} {...listeners}>⠿</div>
+                <div className={styles.itemActions} onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu
+                        items={menuItems}
+                        triggerContent="⋮"
+                        onOpenChange={setIsMenuOpen}
+                    />
+                    <div className={styles.dragHandle} {...attributes} {...listeners}>
+                        ⠿
+                    </div>
                 </div>
             </div>
-            <div ref={dropBottomRef} className={styles.dropZoneBottom} />
 
             {canHaveChildren && isExpanded && (
-                <ul ref={dropInnerRef} className={`${styles.structureUl} ${styles.childrenList}`}>
-                    {hasChildren && children.map(child => (
+                <ul className={`${styles.structureUl} ${styles.childrenList}`}>
+                    {children.map((child) => (
                         <StructureItem
                             key={child.id}
                             block={child}
@@ -97,8 +121,8 @@ const StructureItem = ({
                             selectedId={selectedId}
                             expandedIds={expandedIds}
                             onToggleExpand={onToggleExpand}
-                            activeDragItem={activeDragItem}
-                            overDropZone={overDropZone}
+                            structureNodesRef={structureNodesRef} // Прокидываем дальше
+                            dropIndicator={dropIndicator}       // Прокидываем дальше
                         />
                     ))}
                 </ul>

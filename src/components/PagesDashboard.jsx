@@ -15,7 +15,7 @@ const VersionList = ({ page, onActionComplete }) => {
         const fetchVersions = async () => {
             setIsLoading(true);
             try {
-                const response = await fetch(`http://localhost:3001/pages/${slug}/versions`);
+                const response = await fetch(`/pages/${slug}/versions`);
                 if (!response.ok) throw new Error('Could not load versions');
                 const data = await response.json();
                 setVersions(data);
@@ -31,7 +31,7 @@ const VersionList = ({ page, onActionComplete }) => {
     const handleDeleteVersion = async (versionId) => {
         if (!window.confirm(`Вы уверены, что хотите удалить версию ID: ${versionId}? Это действие необратимо.`)) return;
         try {
-            const response = await fetch(`http://localhost:3001/pages/${slug}/versions/${versionId}`, { method: 'DELETE' });
+            const response = await fetch(`/pages/${slug}/versions/${versionId}`, { method: 'DELETE' });
             if (!response.ok) throw new Error('Error deleting version');
             onActionComplete(); // Refresh all data
         } catch (error) {
@@ -43,7 +43,7 @@ const VersionList = ({ page, onActionComplete }) => {
         const versionToPublish = versions.find(v => v.id === versionId);
         if (!window.confirm(`Опубликовать версию v${versionToPublish?.version_number}? Она станет видна всем пользователям.`)) return;
         try {
-            const response = await fetch(`http://localhost:3001/pages/${slug}/versions/${versionId}/publish`, { method: 'PUT' });
+            const response = await fetch(`/pages/${slug}/versions/${versionId}/publish`, { method: 'PUT' });
             if (!response.ok) throw new Error('Error publishing version');
             alert('Версия успешно опубликована!');
             onActionComplete(); // Refresh all data
@@ -89,7 +89,7 @@ export default function PagesDashboard() {
     const fetchPages = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:3001/pages');
+            const response = await fetch('/pages');
             if (!response.ok) throw new Error('Could not load pages');
             const data = await response.json();
             setPages(data);
@@ -107,7 +107,7 @@ export default function PagesDashboard() {
     const handleDeletePage = async (slug) => {
         if (!window.confirm(`Вы уверены, что хотите удалить страницу "${slug}" и все её версии?`)) return;
         try {
-            const response = await fetch(`http://localhost:3001/pages/${slug}`, { method: 'DELETE' });
+            const response = await fetch(`/api/pages/${slug}`, { method: 'DELETE' });
             if (!response.ok) throw new Error('Error deleting page');
             setPages(pages.filter(p => p.slug !== slug));
             alert('Страница успешно удалена');

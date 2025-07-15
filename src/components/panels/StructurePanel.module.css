@@ -1,63 +1,38 @@
 .structurePanel {
-  width: 280px; /* Сделаем чуть шире */
   padding: 10px;
-  border-left: 1px solid var(--border-color);
   background-color: var(--bg-canvas);
   overflow-y: auto;
   flex-shrink: 0;
-  box-sizing: border-box;
 }
 
 .structureUl {
   list-style: none;
   padding-left: 0;
   margin: 0;
+
+  padding-top: 8px;
+  padding-bottom: 80px;
 }
 
+/* --- Обёртка для каждого элемента списка --- */
 .itemWrapper {
   position: relative;
-  list-style: none; /* Добавляем на всякий случай */
-  margin-bottom: 4px;
+  list-style: none;
+  margin-bottom: 2px;
+  /* Устанавливаем z-index по умолчанию */
+  z-index: 1;
 }
 
-.dropZoneTop, .dropZoneBottom {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 8px;
+.itemWrapper:hover,
+.isSelectedWrapper {
   z-index: 10;
-  left: var(--indent-size); 
-}
-.dropZoneTop { top: -4px; }
-.dropZoneBottom { bottom: -4px; }
-
-.dropTargetBefore::before,
-.dropTargetAfter::after {
-  content: '';
-  position: absolute;
-  height: 2px;
-  background-color: var(--accent-primary);
-  z-index: 20;
-  /* Используем переменную для отступа, которую задали в JSX */
-  left: var(--indent-size); 
-  right: 0;
 }
 
-/* Линия СВЕРХУ */
-.dropTargetBefore::before {
-  top: 0;
+.itemWrapper.menuIsOpen {
+  z-index: 10;
 }
 
-/* Линия СНИЗУ */
-.dropTargetAfter::after {
-  bottom: 0;
-}
-
-.dropTargetInner {
-  /* Просто подсвечиваем фон, не меняя геометрию */
-  background-color: var(--accent-primary-subtle-bg);
-}
-
+/* --- Основной контейнер элемента структуры --- */
 .structureItem {
   display: flex;
   justify-content: space-between;
@@ -65,9 +40,11 @@
   padding: 4px 8px;
   cursor: pointer;
   border-radius: var(--border-radius-md);
-  margin-bottom: 2px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, outline 0.1s ease;
   user-select: none;
+  position: relative;
+  /* Для z-index */
+  z-index: 1;
 }
 
 .structureItem:hover {
@@ -79,14 +56,59 @@
   color: var(--accent-primary);
 }
 
+/* --- Стилизация индикаторов Drag-n-Drop --- */
+
+/* Линии-индикаторы для вставки СВЕРХУ/СНИЗУ */
+.dropTargetBefore::before,
+.dropTargetAfter::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  /* Делаем линию толще и заметнее */
+  background-color: #3b82f6;
+  /* Яркий синий, как на канвасе */
+  border-radius: 2px;
+  z-index: 2;
+  /* Выше чем .structureItem */
+  /* Отступ слева наследуется от переменной --indent-size */
+  margin-left: var(--indent-size);
+}
+
+.dropTargetBefore::before {
+  top: -2px;
+  /* Позиционируем ровно посередине между элементами */
+}
+
+.dropTargetAfter::after {
+  bottom: -2px;
+}
+
+/* Подсветка для вставки ВНУТРЬ элемента */
+.innerDropHighlight {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  /* !important для перекрытия :hover */
+  outline: 2px dashed #3b82f6;
+  outline-offset: -2px;
+}
+
+/* Стиль для элемента, который перетаскивается в данный момент */
+.dragging {
+  opacity: 0.4;
+}
+
+/* --- Внутреннее содержимое элемента --- */
+
 .itemContent {
   display: flex;
   align-items: center;
   gap: 8px;
-  /* Занимает все доступное место, чтобы клик работал по всей ширине */
   flex-grow: 1;
-  /* Предотвращает "убегание" текста */
   min-width: 0;
+  /* Предотвращает "убегание" текста */
+  padding-left: var(--indent-size);
+  /* Применяем отступ здесь */
 }
 
 .toggleButton {
@@ -97,12 +119,14 @@
   width: 16px;
   height: 16px;
   padding: 0;
+  flex-shrink: 0;
 }
 
 .itemIcon {
-  flex-shrink: 0; /* Иконка не должна сжиматься */
+  flex-shrink: 0;
   color: var(--ui-text-secondary);
 }
+
 .itemSelected .itemIcon {
   color: var(--accent-primary);
 }
@@ -118,11 +142,23 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  opacity: 0; /* Появляются при наведении */
   transition: opacity 0.2s ease;
+  flex-shrink: 0;
+
+  /* По умолчанию кнопки невидимы */
+  opacity: 0;
+}
+
+.itemWrapper:hover .itemActions,
+.isSelectedWrapper .itemActions {
+  opacity: 1;
 }
 
 .structureItem:hover .itemActions {
+  opacity: 1;
+}
+
+.itemSelected .itemActions {
   opacity: 1;
 }
 
@@ -132,51 +168,10 @@
   padding: 4px;
 }
 
+/* --- Список дочерних элементов --- */
 .childrenList {
   position: relative;
-  padding-left: 5px;
-  margin-top: 4px;
-  border-radius: var(--border-radius-sm);
-  transition: background-color 0.2s ease;
-}
-
-.childrenList:empty {
-  min-height: 34px; /* Задаем минимальную высоту для удобства попадания */
-  margin-bottom: 4px;
-  background-color: var(--bg-hover);
-  border: 1px dashed var(--border-color);
-  border-radius: var(--border-radius-sm);
-}
-
-.ghost {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 34px; /* Примерная высота, как у обычного элемента */
-  padding: 4px 8px;
-  background-color: var(--accent-primary-subtle-bg);
-  border: 1px dashed var(--accent-primary);
-  border-radius: var(--border-radius-md);
-  opacity: 0.7;
-  margin-bottom: 2px;
-  box-sizing: border-box;
-}
-
-.isCollapsed {
-  min-height: 0;
   padding: 0;
   margin: 0;
-  overflow: hidden;
-  height: 0;
-}
-
-.emptyDropPlaceholder {
-    list-style: none;
-    padding: 10px;
-    font-size: 12px;
-    text-align: center;
-    color: var(--ui-text-secondary);
-    background-color: var(--bg-hover);
-    border-radius: var(--border-radius-sm);
-    border: 1px dashed var(--border-color);
+  list-style: none;
 }
