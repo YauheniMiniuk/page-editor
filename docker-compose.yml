@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  page-builder:
+    build: .
+    container_name: page-builder
+    ports:
+      - "8080:80"
+    networks:
+      - dashboard20_dev
+    restart: unless-stopped
+
+networks:
+  dashboard20_dev:
+    external: true
