@@ -147,8 +147,8 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
       setIsLoading(true);
       try {
         const apiUrl = versionId
-          ? `/pages/${slug}?mode=${mode}&version=${versionId}`
-          : `/pages/${slug}?mode=${mode}`;
+          ? `/api/pages/${slug}?mode=${mode}&version=${versionId}`
+          : `/api/pages/${slug}?mode=${mode}`;
 
         const response = await fetch(apiUrl);
         if (!response.ok) {
@@ -212,7 +212,7 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
     if (!finalSlug) return alert("Slug обязателен.");
 
     try {
-      const response = await fetch(`/pages`, {
+      const response = await fetch(`/api/pages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -238,7 +238,7 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
 
   const handleCreateNewVersion = async () => {
     try {
-      const response = await fetch(`/pages/${slug}/versions`, {
+      const response = await fetch(`/api/pages/${slug}/versions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -276,7 +276,7 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
 
     if (window.confirm(`Опубликовать эту версию? Она станет видна всем пользователям.`)) {
       try {
-        const response = await fetch(`/pages/${slug}/versions/${versionId}/publish`, {
+        const response = await fetch(`/api/pages/${slug}/versions/${versionId}/publish`, {
           method: 'PUT',
         });
         if (!response.ok) {
