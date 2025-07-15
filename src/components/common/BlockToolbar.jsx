@@ -31,8 +31,8 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
     },
   ];
 
-  const handleSwapUp = () => actions.swapBlock(selectedBlock.id, 'up');
-  const handleSwapDown = () => actions.swapBlock(selectedBlock.id, 'down');
+  const handleSwapUp = () => actions.swap(selectedBlock.id, 'up');
+  const handleSwapDown = () => actions.swap(selectedBlock.id, 'down');
   const handleSelectParent = () => actions.select(parent.id);
 
   useLayoutEffect(() => {
@@ -74,7 +74,9 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
     };
 
     // Вычисляем позицию при первом рендере и при смене зависимостей
-    calculatePosition();
+    setTimeout(() => {
+      calculatePosition();
+    }, 150);
 
     // Добавляем слушатели для "живого" следования
     window.addEventListener('scroll', calculatePosition, true);
@@ -88,7 +90,7 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
   }, [
     targetRef.current,    // <-- ГЛАВНЫЙ ФИКС: теперь эффект перезапустится, когда узел появится
     selectedBlock.id,     // Пересчитываем позицию при выборе нового блока
-    blockInfo?.index
+    blocks
   ]);
 
   const toolbarContent = (

@@ -6,7 +6,7 @@ import { withBlock } from '../../hocs/withBlock';
 
 // --- UI и иконки ---
 import styles from './AccordionBlock.module.css';
-import { AccordionIcon, ChevronDownIcon, PlusIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon } from '../../utils/icons'; // Предполагаем, что иконки есть
+import { AccordionIcon, ChevronDownIcon, PlusIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon } from '../../utils/icons';
 import Tabs from '../../ui/Tabs';
 import Tab from '../../ui/Tab';
 import Checkbox from '../../ui/Checkbox';
@@ -14,12 +14,13 @@ import Input from '../../ui/Input';
 import ToolbarButton from '../../ui/ToolbarButton';
 
 //================================================================================
-// 1. Компонент отдельной вкладки (Accordion Item) - ИЗМЕНЕН
+// 1. Компонент отдельной вкладки (Accordion Item)
 //================================================================================
 const AccordionItemBlock = forwardRef(({ block, children, className, style, actions, mode, ...rest }, ref) => {
     const { props = {} } = block;
     const { title = "Заголовок" } = props;
 
+    // Эти пропсы приходят от родителя (AccordionBlock) через React.cloneElement
     const { isOpen, onToggle } = rest;
     const isEditMode = mode === 'edit';
 
@@ -27,21 +28,21 @@ const AccordionItemBlock = forwardRef(({ block, children, className, style, acti
 
     const handleTitleBlur = (e) => {
         if (!isEditMode) return;
+
         const newTitle = e.currentTarget.textContent;
         if (newTitle !== title) {
             actions.update(block.id, { props: { ...props, title: newTitle } });
         }
     };
 
-    // --- ЛОГИКА ДЛЯ РАЗДЕЛЕНИЯ КЛИКОВ ---
+    // В режиме просмотра вся шапка кликабельна
     const headerProps = {
-        // В режиме просмотра вся шапка кликабельна
-        ...( !isEditMode && { onClick: onToggle, role: 'button' } )
+        ...(!isEditMode && { onClick: onToggle, role: 'button' })
     };
 
+    // В режиме редактирования кликабельна только иконка
     const iconProps = {
-        // В режиме редактирования только иконка кликабельна
-        ...( isEditMode && { onClick: onToggle, role: 'button' } )
+        ...(isEditMode && { onClick: onToggle, role: 'button' })
     };
 
     return (
@@ -52,7 +53,6 @@ const AccordionItemBlock = forwardRef(({ block, children, className, style, acti
                     contentEditable={isEditMode}
                     suppressContentEditableWarning
                     onBlur={handleTitleBlur}
-                    // Предотвращаем схлопывание аккордеона при клике на текст для редактирования
                     onClick={isEditMode ? e => e.stopPropagation() : undefined}
                     onKeyDown={isEditMode ? e => e.stopPropagation() : undefined}
                 >
@@ -79,7 +79,11 @@ const AccordionItemBlock = forwardRef(({ block, children, className, style, acti
                     >
                         <div className={styles.contentInner}>
                             {hasChildren ? children : (
-                                isEditMode && <div className={styles.emptyDropZone}>Перетащите блок сюда</div>
+                                isEditMode && (
+                                    <div className={styles.emptyDropZone}>
+                                        Перетащите блок сюда
+                                    </div>
+                                )
                             )}
                         </div>
                     </motion.div>
@@ -91,11 +95,10 @@ const AccordionItemBlock = forwardRef(({ block, children, className, style, acti
 
 
 //================================================================================
-// 2. Компонент-обертка для Аккордеона - ИЗМЕНЕН
+// 2. Компонент-обертка для Аккордеона
 //================================================================================
 const AccordionBlock = forwardRef(({ block, children, className, style, ...rest }, ref) => {
-    // --- ИСПРАВЛЕНИЕ: ХРАНИМ ID, А НЕ ИНДЕКСЫ ---
-    // По умолчанию открываем первую вкладку, если она есть
+    // Храним в состоянии ID открытых вкладок, а не их индексы
     const [openIds, setOpenIds] = useState(() => [block.children?.[0]?.id].filter(Boolean));
 
     const { allowMultipleOpen = false } = block.props || {};
@@ -134,26 +137,18 @@ AccordionItemBlock.blockInfo = {
     isContainer: true,
     description: "Отдельная вкладка для блока 'Аккордеон'. Не может быть использована самостоятельно.",
     keywords: ['вкладка', 'панель', 'секция'],
-
-    // --- Правила ---
     parent: ['core/accordion'],
-    allowedBlocks: null, // Может содержать любые блоки
-
-    // --- Поддержка функций ---
+    allowedBlocks: null,
     supports: {
-        // КЛЮЧЕВОЕ ПРАВИЛО: не показывать этот блок в панели добавления
         inserter: false,
         reusable: false,
         html: false,
     },
-
-    // --- Данные ---
     defaultData: {
         type: 'core/accordion-item',
         props: { title: 'Новая вкладка' },
         children: [],
     },
-    // Тулбар для отдельной вкладки
     getToolbarItems: ({ block, actions }) => (
         <>
             <ToolbarButton title="Переместить вверх" onClick={() => actions.swap(block.id, 'up')}>
@@ -178,34 +173,14 @@ AccordionBlock.blockInfo = {
     isContainer: true,
     description: "Группирует контент в виде сворачиваемых панелей. Отлично подходит для секций FAQ.",
     keywords: ['faq', 'вопросы и ответы', 'список', 'скрытый текст'],
-
-    // --- Правила ---
     parent: null,
     allowedBlocks: ['core/accordion-item'],
-
-    // --- Поддержка функций ---
     supports: {
         reusable: true,
         anchor: true,
         customClassName: true,
         html: false,
     },
-
-    // --- Пример для превью ---
-    example: {
-        props: { allowMultipleOpen: false },
-        children: [
-            {
-                ...AccordionItemBlock.blockInfo.defaultData,
-                id: 'preview_1',
-                props: { title: "Что такое HTML Builder?" },
-                children: [{ type: 'core/text', id: 'preview_text_1', content: 'Это инструмент для визуального создания веб-страниц.' }]
-            },
-            { ...AccordionItemBlock.blockInfo.defaultData, id: 'preview_2', props: { title: "Зачем он нужен?" } },
-        ]
-    },
-
-    // --- Данные ---
     defaultData: () => ({
         type: 'core/accordion',
         props: { allowMultipleOpen: false },
@@ -228,7 +203,6 @@ AccordionBlock.blockInfo = {
             </ToolbarButton>
         );
     },
-    // Настройки в боковой панели
     getEditor: ({ block, onChange }) => {
         const { props = {} } = block;
 
@@ -236,7 +210,6 @@ AccordionBlock.blockInfo = {
             onChange({ props: { ...props, ...newProps } });
         };
 
-        // Редактирование заголовков всех вкладок централизованно
         const handleItemTitleChange = (itemId, newTitle) => {
             const newChildren = block.children.map(child => {
                 if (child.id === itemId) {
@@ -269,7 +242,6 @@ AccordionBlock.blockInfo = {
                     </div>
                 </Tab>
                 <Tab title="Стили">
-                    {/* Здесь можно добавить настройки стилей, как у контейнера */}
                     <p>Настройки отступов, цветов и т.д.</p>
                 </Tab>
             </Tabs>
@@ -283,9 +255,7 @@ AccordionBlock.blockInfo = {
 AccordionBlock.blockStyles = styles;
 AccordionItemBlock.blockStyles = styles;
 
-// Экспортируем обернутые HOC'ом компоненты
 export const AccordionBlockWrapped = withBlock(AccordionBlock);
 export const AccordionItemBlockWrapped = withBlock(AccordionItemBlock);
 
-// Экспорт по умолчанию для основного блока
 export default AccordionBlockWrapped;

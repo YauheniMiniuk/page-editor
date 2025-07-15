@@ -1,5 +1,4 @@
 import { nanoid } from "nanoid";
-import { BLOCK_COMPONENTS, BLOCK_TYPES } from "./constants";
 
 export const isAncestor = (blocks, potentialAncestorId, childId) => {
   const childInfo = findBlockAndParent(blocks, childId);
@@ -403,17 +402,6 @@ export const updateListItemContent = (blocks, itemId, newContent) => {
   if (!itemInfo) return blocksCopy;
   itemInfo.item.content = newContent;
   return blocksCopy;
-};
-
-export const transformBlock = (blocks, blockId, newType) => {
-  const { blockInfo } = BLOCK_COMPONENTS[newType] || {};
-  if (!blockInfo) return blocks;
-
-  const newBlock = { id: blockId, ...blockInfo.defaultData };
-
-  return blocks.map(b => b.id === blockId ? newBlock : b);
-  // Примечание: это очень простая трансформация, она не сохраняет контент.
-  // Для более сложных случаев понадобится логика из `blockInfo.transforms`.
 };
 
 /**

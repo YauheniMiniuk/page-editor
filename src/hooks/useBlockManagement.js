@@ -36,7 +36,19 @@ const useBlockManagement = (initialBlocks = []) => {
     // Функции, которые только обновляют состояние, не завися от него
     update: (id, props) => setBlocks(prev => updateBlockRecursive(prev, id, props)),
     add: (targetId, block, pos) => setBlocks(prev => insertBlockRecursive(prev, targetId, block, pos)),
-    swap: (id, dir) => setBlocks(prev => swapBlocksRecursive(prev, id, dir)),
+    swap: (id, dir) => {
+      // 1. Как и раньше, обновляем массив блоков
+      setBlocks(prev => swapBlocksRecursive(prev, id, dir));
+
+      // 2. А теперь "магия": мы заставляем тулбар исчезнуть...
+      setSelectedBlockId(null);
+
+      // 3. ...и с помощью setTimeout(..., 0) говорим "появись обратно в самом ближайшем будущем",
+      // когда мы будем на 100% уверены, что DOM уже обновился.
+      setTimeout(() => {
+        setSelectedBlockId(id);
+      }, 0);
+    },
     indentListItem: (id) => {
       setBlocks(prev => indentListItem(prev, id));
       setFocusRequest({ targetId: id, position: 'start' });
@@ -46,7 +58,9 @@ const useBlockManagement = (initialBlocks = []) => {
       setFocusRequest({ targetId: id, position: 'start' });
     },
     updateListItemContent: (id, content) => setBlocks(prev => updateListItemContent(prev, id, content)),
-    transformBlock: (id, newType) => setBlocks(prev => transformBlock(prev, id, newType)),
+    replaceBlock: (blockId, newBlockObject) => {
+      setBlocks(prev => prev.map(b => (b.id === blockId ? newBlockObject : b)));
+    },
 
     // Функции, которые зависят от текущего состояния (blocks, selectedBlockId)
     delete: (id) => {
@@ -102,11 +116,8 @@ const useBlockManagement = (initialBlocks = []) => {
     blocks,
     selectedBlockId,
     activeId,
-    activeDragItem,
-    setActiveDragItem,
-    overDropZone,
-    focusRequest,
     isInlineEditing,
+    focusRequest,
     actions,
     canUndo,
     canRedo,

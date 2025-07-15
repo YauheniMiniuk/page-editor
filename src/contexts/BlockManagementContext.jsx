@@ -1,6 +1,5 @@
 import React, { createContext, useContext } from 'react';
 import useBlockManagement from '../hooks/useBlockManagement'; // Убедись, что путь верный
-import { initialBlockState } from '../utils/constants'; // Начальное состояние
 
 // 1. Создаем сам контекст
 const BlockManagementContext = createContext(null);
@@ -8,7 +7,7 @@ const BlockManagementContext = createContext(null);
 // 2. Создаем "Провайдер" - компонент, который будет "раздавать" состояние
 export const BlockManagementProvider = ({ children }) => {
   // Вся логика из нашего хука теперь живет здесь, один раз
-  const blockManager = useBlockManagement(initialBlockState);
+  const blockManager = useBlockManagement([]);
 
   return (
     <BlockManagementContext.Provider value={blockManager}>

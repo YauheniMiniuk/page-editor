@@ -3,8 +3,6 @@ import { BLOCK_COMPONENTS } from '../../utils/constants';
 import { useBlockManager } from '../../contexts/BlockManagementContext';
 
 const BlockRenderer = ({ block, mode, blockNodesRef, layoutDirection = 'column', ...rest }) => {
-    // Получаем activeId здесь, чтобы передать его вниз
-    const { selectedBlockId, activeId, actions } = useBlockManager();
     const ComponentToRender = BLOCK_COMPONENTS[block.type];
     const { blockInfo } = ComponentToRender || {};
 

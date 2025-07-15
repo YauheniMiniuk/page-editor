@@ -1,12 +1,14 @@
 import React, { useRef } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import classNames from 'classnames';
+import { motion } from 'framer-motion'; // <-- Импортируем motion
 import BlockToolbar from '../components/common/BlockToolbar';
 import { getVariantClasses } from '../utils/styleUtils';
 import styles from './withBlock.module.css';
 import { useBlockManager } from '../contexts/BlockManagementContext';
 
 export const withBlock = (BlockComponent) => {
+    const MotionBlockComponent = motion(BlockComponent);
     const WrappedComponent = React.forwardRef((props, ref) => {
         // --- Получаем всё из одного места ---
         const { block, mode, blockNodesRef, layoutDirection } = props;
@@ -15,7 +17,7 @@ export const withBlock = (BlockComponent) => {
         // --- Вычисляем состояния прямо здесь ---
         const isSelected = selectedBlockId === block.id;
         const isEditMode = mode === 'edit';
-        
+
         const { blockInfo, blockStyles } = BlockComponent;
         const { isContainer, getToolbarItems } = blockInfo;
         const blockRef = useRef(null);
@@ -74,15 +76,28 @@ export const withBlock = (BlockComponent) => {
                         {toolbarContent}
                     </BlockToolbar>
                 )}
-                <BlockComponent
+
+                {/* --- ИЗМЕНЕНИЕ 3: Используем MotionBlockComponent и передаем ему motion-пропсы --- */}
+                <MotionBlockComponent
                     {...props}
                     actions={actions}
                     ref={mergeRefs}
                     isSelected={isSelected}
                     className={finalClassName}
                     style={{ ...props.style, ...finalStyle }}
+
+                    // DnD атрибуты
                     {...attributes}
                     {...listeners}
+
+                    // Motion пропсы
+                    layout="position"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+
+                    // Остальные пропсы
                     onClick={mode === 'edit' ? handleBlockClick : undefined}
                     data-block-id={block.id}
                 />
