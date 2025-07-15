@@ -88,6 +88,7 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
   }, [
     targetRef.current,    // <-- ГЛАВНЫЙ ФИКС: теперь эффект перезапустится, когда узел появится
     selectedBlock.id,     // Пересчитываем позицию при выборе нового блока
+    blockInfo?.index
   ]);
 
   const toolbarContent = (

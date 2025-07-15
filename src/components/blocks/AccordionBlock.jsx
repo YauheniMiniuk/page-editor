@@ -14,42 +14,55 @@ import Input from '../../ui/Input';
 import ToolbarButton from '../../ui/ToolbarButton';
 
 //================================================================================
-// 1. Компонент отдельной вкладки (Accordion Item)
+// 1. Компонент отдельной вкладки (Accordion Item) - ИЗМЕНЕН
 //================================================================================
 const AccordionItemBlock = forwardRef(({ block, children, className, style, actions, mode, ...rest }, ref) => {
     const { props = {} } = block;
     const { title = "Заголовок" } = props;
 
-    // Эти пропсы придут от родителя (AccordionBlock)
     const { isOpen, onToggle } = rest;
     const isEditMode = mode === 'edit';
 
     const hasChildren = React.Children.count(children) > 0;
 
-    // Обработчик для редактирования заголовка прямо в блоке
     const handleTitleBlur = (e) => {
         if (!isEditMode) return;
-
         const newTitle = e.currentTarget.textContent;
         if (newTitle !== title) {
             actions.update(block.id, { props: { ...props, title: newTitle } });
         }
     };
 
+    // --- ЛОГИКА ДЛЯ РАЗДЕЛЕНИЯ КЛИКОВ ---
+    const headerProps = {
+        // В режиме просмотра вся шапка кликабельна
+        ...( !isEditMode && { onClick: onToggle, role: 'button' } )
+    };
+
+    const iconProps = {
+        // В режиме редактирования только иконка кликабельна
+        ...( isEditMode && { onClick: onToggle, role: 'button' } )
+    };
+
     return (
         <div ref={ref} className={classNames(styles.accordionItem, className)} style={style} {...rest}>
-            <button className={styles.itemHeader} onClick={onToggle}>
+            <div className={styles.itemHeader} {...headerProps}>
                 <span
                     className={classNames(styles.itemTitle, { [styles.notEditable]: !isEditMode })}
                     contentEditable={isEditMode}
                     suppressContentEditableWarning
                     onBlur={handleTitleBlur}
-                    onMouseDown={isEditMode ? (e) => e.stopPropagation() : undefined}
+                    // Предотвращаем схлопывание аккордеона при клике на текст для редактирования
+                    onClick={isEditMode ? e => e.stopPropagation() : undefined}
+                    onKeyDown={isEditMode ? e => e.stopPropagation() : undefined}
                 >
                     {title}
                 </span>
-                <ChevronDownIcon className={classNames(styles.itemIcon, { [styles.itemIconOpen]: isOpen })} />
-            </button>
+                <ChevronDownIcon 
+                    className={classNames(styles.itemIcon, { [styles.itemIconOpen]: isOpen })} 
+                    {...iconProps} 
+                />
+            </div>
             <AnimatePresence initial={false}>
                 {isOpen && (
                     <motion.div
@@ -58,20 +71,15 @@ const AccordionItemBlock = forwardRef(({ block, children, className, style, acti
                         animate="open"
                         exit="collapsed"
                         variants={{
-                            open: { opacity: 1, height: 'auto' },
-                            collapsed: { opacity: 0, height: 0 },
+                            open: { opacity: 1, height: 'auto', overflow: 'hidden' },
+                            collapsed: { opacity: 0, height: 0, overflow: 'hidden' },
                         }}
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                         className={styles.itemContent}
                     >
-                        {/* Это наша DND-зона */}
                         <div className={styles.contentInner}>
                             {hasChildren ? children : (
-                                isEditMode && (
-                                    <div className={styles.emptyDropZone}>
-                                        Перетащите блок сюда
-                                    </div>
-                                )
+                                isEditMode && <div className={styles.emptyDropZone}>Перетащите блок сюда</div>
                             )}
                         </div>
                     </motion.div>
@@ -83,29 +91,32 @@ const AccordionItemBlock = forwardRef(({ block, children, className, style, acti
 
 
 //================================================================================
-// 2. Компонент-обертка для Аккордеона (Accordion Wrapper)
+// 2. Компонент-обертка для Аккордеона - ИЗМЕНЕН
 //================================================================================
-const AccordionBlock = forwardRef(({ block, children, className, style, actions, ...rest }, ref) => {
-    const [openIndexes, setOpenIndexes] = useState([0]); // По умолчанию открыт первый элемент
+const AccordionBlock = forwardRef(({ block, children, className, style, ...rest }, ref) => {
+    // --- ИСПРАВЛЕНИЕ: ХРАНИМ ID, А НЕ ИНДЕКСЫ ---
+    // По умолчанию открываем первую вкладку, если она есть
+    const [openIds, setOpenIds] = useState(() => [block.children?.[0]?.id].filter(Boolean));
 
     const { allowMultipleOpen = false } = block.props || {};
 
-    const handleToggle = (index) => {
-        if (allowMultipleOpen) {
-            setOpenIndexes(current =>
-                current.includes(index) ? current.filter(i => i !== index) : [...current, index]
-            );
-        } else {
-            setOpenIndexes(current => (current.includes(index) ? [] : [index]));
-        }
+    const handleToggle = (itemId) => {
+        setOpenIds(currentIds => {
+            const isOpen = currentIds.includes(itemId);
+            if (allowMultipleOpen) {
+                return isOpen ? currentIds.filter(id => id !== itemId) : [...currentIds, itemId];
+            } else {
+                return isOpen ? [] : [itemId];
+            }
+        });
     };
 
     return (
         <div ref={ref} className={classNames(styles.accordionWrapper, className)} style={style} {...rest}>
-            {React.Children.map(children, (child, index) =>
+            {React.Children.map(children, (child) =>
                 React.cloneElement(child, {
-                    isOpen: openIndexes.includes(index),
-                    onToggle: () => handleToggle(index),
+                    isOpen: openIds.includes(child.props.block.id),
+                    onToggle: () => handleToggle(child.props.block.id),
                 })
             )}
         </div>
@@ -145,10 +156,10 @@ AccordionItemBlock.blockInfo = {
     // Тулбар для отдельной вкладки
     getToolbarItems: ({ block, actions }) => (
         <>
-            <ToolbarButton title="Переместить вверх" onClick={() => actions.swapBlock(block.id, 'up')}>
+            <ToolbarButton title="Переместить вверх" onClick={() => actions.swap(block.id, 'up')}>
                 <ArrowUpIcon />
             </ToolbarButton>
-            <ToolbarButton title="Переместить вниз" onClick={() => actions.swapBlock(block.id, 'down')}>
+            <ToolbarButton title="Переместить вниз" onClick={() => actions.swap(block.id, 'down')}>
                 <ArrowDownIcon />
             </ToolbarButton>
             <div className="toolbarSeparator"></div>
