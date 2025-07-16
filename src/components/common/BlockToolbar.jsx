@@ -5,8 +5,9 @@ import { useBlockManager } from '../../contexts/BlockManagementContext';
 import { findBlockAndParent } from '../../utils/blockUtils';
 import DropdownMenu from '../../ui/DropdownMenu';
 import ToolbarButton from '../../ui/ToolbarButton';
-import { DragHandleIcon } from '../../utils/icons';
+import { CopyStylesIcon, DragHandleIcon, DuplicateIcon, PasteStylesIcon } from '../../utils/icons';
 import ToolbarButtonGroup from '../../ui/ToolbarButtonGroup';
+import { DeleteIcon, TrashIcon } from 'lucide-react';
 
 const TOOLBAR_MARGIN = 8; // Отступ от блока в пикселях
 const portalRoot = document.getElementById('portal-root');
@@ -15,7 +16,7 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
   const toolbarRef = useRef(null);
   const [style, setStyle] = useState({ opacity: 0 }); // Начинаем с невидимого состояния
 
-  const { blocks, actions, copiedStyles  } = useBlockManager();
+  const { blocks, actions, copiedStyles } = useBlockManager();
 
   const blockInfo = findBlockAndParent(blocks, selectedBlock.id);
   const parent = blockInfo?.parent;
@@ -26,25 +27,24 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
   const menuItems = [
     {
       label: 'Дублировать',
-      icon: '📄',
+      icon: <DuplicateIcon />,
       onClick: () => actions.duplicate(selectedBlock.id),
     },
     {
       label: 'Копировать стили',
-      icon: '🎨',
+      icon: <CopyStylesIcon />,
       onClick: () => actions.copyStyles(selectedBlock.id),
     },
     {
       label: 'Вставить стили',
-      icon: '🖌️',
+      icon: <PasteStylesIcon />,
       onClick: () => actions.pasteStyles(selectedBlock.id),
-      // Делаем пункт неактивным, если в "буфере обмена" пусто
       disabled: !copiedStyles,
     },
-    { isSeparator: true }, // Убедись, что твой DropdownMenu это поддерживает
+    { isSeparator: true },
     {
       label: 'Удалить блок',
-      icon: '🗑️',
+      icon: <TrashIcon />,
       onClick: () => actions.delete(selectedBlock.id),
       isDestructive: true,
     },

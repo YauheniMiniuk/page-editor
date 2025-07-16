@@ -1,116 +1,35 @@
 .container {
   width: 100%;
-  min-height: 80px;
   box-sizing: border-box;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
-  display: flex;
+  display: flex; /* Flexbox включен всегда */
+  min-height: 40px; /* Уменьшим базовую высоту */
 }
 
-.dropOverlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--accent-primary-subtle-bg);
-  border: 2px dashed var(--accent-primary);
-  z-index: 1;
-  pointer-events: none; /* Важно, чтобы оверлей не мешал другим событиям */
-}
+/* --- Ширина --- */
+.variant-align-none { max-width: 620px; margin-left: auto; margin-right: auto; }
+.variant-align-wide { max-width: 1280px; margin-left: auto; margin-right: auto; }
+.variant-align-full { max-width: none; }
 
-.isEmpty {
-  border: 2px dashed #d1d5db;
-  align-items: center;
-  justify-content: center;
-}
+/* --- Направление --- */
+.variant-direction-column { flex-direction: column; }
+.variant-direction-row { flex-direction: row; }
 
-.isOverInner {
-  background-color: rgba(59, 130, 246, 0.1) !important;
-  box-shadow: inset 0 0 0 2px #3b82f6 !important;
-}
+/* --- Выравнивание по основной оси --- */
+.variant-justifyContent-flex-start { justify-content: flex-start; }
+.variant-justifyContent-center { justify-content: center; }
+.variant-justifyContent-flex-end { justify-content: flex-end; }
+.variant-justifyContent-space-between { justify-content: space-between; }
+.variant-justifyContent-space-around { justify-content: space-around; }
+.variant-justifyContent-space-evenly { justify-content: space-evenly; }
 
-.emptyPlaceholder {
-  color: #9ca3af;
-  font-style: italic;
-  font-size: 14px;
-  pointer-events: none;
-}
+/* --- Выравнивание по поперечной оси --- */
+.variant-alignItems-stretch { align-items: stretch; }
+.variant-alignItems-flex-start { align-items: flex-start; }
+.variant-alignItems-center { align-items: center; }
+.variant-alignItems-flex-end { align-items: flex-end; }
 
-.emptyDropZone {
-  width: 100%;
-  padding: 40px 20px;
-  border-radius: 8px;
-  text-align: center;
-  color: #9ca3af;
-  transition: all 0.2s;
-}
-
-.emptyDropZone.isOver {
-  border-color: #3b82f6;
-  background-color: rgba(59, 130, 246, 0.1);
-}
-
-
-.variant-align-none {
-  max-width: 620px;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-.variant-align-wide {
-  max-width: 1280px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.variant-align-full {
-  max-width: none;
-}
-
-.variant-direction-column {
-  flex-direction: column;
-}
-
-.variant-direction-row {
-  flex-direction: row;
-  align-items: flex-start;
-}
-
-.variant-justifyContent-start {
-  justify-content: flex-start;
-}
-
-.variant-justifyContent-center {
-  justify-content: center;
-}
-
-.variant-justifyContent-space-between {
-  justify-content: space-between;
-}
-
-.variant-justifyContent-space-around {
-  justify-content: space-around;
-}
-
-.variant-justifyContent-space-evenly {
-  justify-content: space-evenly;
-}
-
-.variant-alignItems-flex-start {
-  align-items: flex-start;
-}
-
-.variant-alignItems-center {
-  align-items: center;
-}
-
-.variant-alignItems-flex-end {
-  align-items: flex-end;
-}
-
-.variant-alignItems-stretch {
-  align-items: stretch;
-}
+/* --- Перенос элементов --- */
+.variant-allowWrap-true { flex-wrap: wrap; }
 
 @media (max-width: 768px) {
     /* Если у блока есть класс .variant-allowWrap-true... */

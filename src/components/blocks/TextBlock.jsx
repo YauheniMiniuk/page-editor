@@ -17,6 +17,7 @@ import { withBlock } from '../../hocs/withBlock';
 import { useInlineEditing } from '../../hooks/useInlineEditing';
 import { useBlockManager } from '../../contexts/BlockManagementContext';
 import { toggleStyle } from '../../utils/textUtils';
+import Input from '../../ui/Input';
 
 //================================================================================
 // 1. Компонент TextBlock
@@ -63,6 +64,7 @@ const TextBlock = forwardRef(({ block, actions, className, style, mode, isSelect
   return (
     <MotionTag
       ref={mergeRefs}
+      id={props.id || undefined}
       className={classNames(styles.text, { [styles.hasDropCap]: props.hasDropCap }, className)}
       style={{ ...block.styles, ...style }}
       onBlur={handleBlur}
@@ -127,7 +129,12 @@ TextBlock.blockInfo = {
   defaultData: () => ({
     type: 'core/text',
     content: 'Это простой текстовый блок. Начните вводить текст...',
-    props: { as: 'p', hasDropCap: false }, // Изменил as на 'p' по умолчанию для семантики
+    props: {
+      as: 'p',
+      hasDropCap: false,
+      id: '',
+      className: '',
+    },
     variants: { textAlign: 'left', fontSize: 'normal' },
     styles: {},
   }),
@@ -302,7 +309,7 @@ TextBlock.blockInfo = {
             label="Высота строки"
             value={styles.lineHeight || ''}
             onChange={(val) => handleStyleChange({ lineHeight: val })}
-            units={['', 'em', 'rem', 'px']}
+            units={['px', 'em', 'rem',]}
           />
           <CustomUnitInput
             label="Межбуквенный интервал"
@@ -316,11 +323,28 @@ TextBlock.blockInfo = {
             onChange={(e) => handlePropsChange({ hasDropCap: e.target.checked })}
           />
           <hr />
-          <h4>Отступы</h4>
+          <h4>Геометрия и отступы</h4>
           <CustomUnitInput
-            label="Внутренние отступы (padding)"
+            label="Внутренний отступ (padding)"
             value={styles.padding || ''}
             onChange={(val) => handleStyleChange({ padding: val })}
+          />
+          <CustomUnitInput
+            label="Внешний отступ (margin)"
+            value={styles.margin || ''}
+            onChange={(val) => handleStyleChange({ margin: val })}
+          />
+          <CustomUnitInput
+            label="Скругление углов"
+            value={styles.borderRadius || ''}
+            onChange={(val) => handleStyleChange({ borderRadius: val })}
+            units={['px', '%']}
+          />
+          <Input
+            label="Граница (border)"
+            placeholder="e.g. 1px solid #000"
+            value={styles.border || ''}
+            onChange={(e) => handleStyleChange({ border: e.target.value })}
           />
         </Tab>
         <Tab title="Цвет">
@@ -350,7 +374,21 @@ TextBlock.blockInfo = {
           />
         </Tab>
         <Tab title="Дополнительно">
-          {/* ... */}
+          {/* --- НОВАЯ СЕКЦИЯ: Дополнительно --- */}
+          <Input
+            label="HTML-якорь"
+            placeholder="Например, section-1"
+            value={props.id || ''}
+            onChange={(e) => handlePropsChange({ id: e.target.value })}
+            helpText="Позволяет создать прямую ссылку на этот блок."
+          />
+          <Input
+            label="Дополнительные CSS-классы"
+            placeholder="my-class another-class"
+            value={props.className || ''}
+            onChange={(e) => handlePropsChange({ className: e.target.value })}
+            helpText="Для кастомной стилизации через CSS."
+          />
         </Tab>
       </Tabs>
     );

@@ -19,23 +19,28 @@ import {
 import Checkbox from '../../ui/Checkbox';
 
 const ContainerBlock = forwardRef(({ block, children, containerDropRef, isContainerOver, className, style, ...rest }, ref) => {
-    const { props = {}, styles: blockStyles = {} } = block;
+    const { props = {}, styles: blockStyles = {}, variants = {} } = block;
     const Tag = props.as || 'div';
     const hasChildren = React.Children.count(children) > 0;
 
-    // Объединяем стили из данных блока и те, что пришли от HOC
     const inlineStyles = {
         ...blockStyles,
-        display: 'flex',
-        flexDirection: block.variants?.direction || 'column',
-        justifyContent: block.variants?.justifyContent || 'flex-start',
-        alignItems: block.variants?.alignItems || 'stretch',
-        minHeight: '80px',
         ...style,
     };
 
     // Объединяем свои классы и классы от HOC
-    const finalClasses = classNames(styles.container, className);
+    const finalClasses = classNames(
+        styles.container,
+        className, // Классы от HOC
+        {
+            // Добавляем классы на основе вариантов (variants)
+            [styles[`variant-align-${variants.align}`]]: variants.align,
+            [styles[`variant-direction-${variants.direction}`]]: variants.direction,
+            [styles[`variant-justifyContent-${variants.justifyContent}`]]: variants.justifyContent,
+            [styles[`variant-alignItems-${variants.alignItems}`]]: variants.alignItems,
+            [styles['variant-allowWrap-true']]: variants.allowWrap,
+        }
+    );
 
     const MotionTag = motion[Tag] || motion.div;
 
