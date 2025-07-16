@@ -10,18 +10,32 @@
     transition: background-color 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-    /* Колонки по умолчанию занимают равное пространство */
 }
 
-/* Стили для пустых зон, как в ContainerBlock */
+/* --- Классы для выравнивания, которые раньше не работали --- */
+.variant-verticalAlign-flex-start { align-items: flex-start; }
+.variant-verticalAlign-center { align-items: center; }
+.variant-verticalAlign-flex-end { align-items: flex-end; }
+.variant-verticalAlign-stretch { align-items: stretch; }
+
+/* Для контента внутри отдельной колонки */
+.variant-justifyContent-flex-start { justify-content: flex-start; }
+.variant-justifyContent-center { justify-content: center; }
+.variant-justifyContent-flex-end { justify-content: flex-end; }
+.variant-justifyContent-space-between { justify-content: space-between; }
+
+/* --- Адаптивность --- */
+@media (max-width: 768px) {
+    /* Если у блока есть класс .variant-stackOnMobile-true... */
+    .variant-stackOnMobile-true {
+        /* ... меняем направление на вертикальное */
+        flex-direction: column;
+    }
+}
+
+/* --- Стили для пустых зон --- */
 .isEmpty {
     border: 2px dashed #d1d5db;
-}
-
-.isOverInner {
-    background-color: rgba(59, 130, 246, 0.1) !important;
-    box-shadow: inset 0 0 0 2px #3b82f6 !important;
 }
 
 .emptyDropZone {
@@ -31,15 +45,5 @@
     text-align: center;
     color: #9ca3af;
     transition: all 0.2s;
-}
-
-.emptyDropZone.isOver {
-    border-color: #3b82f6;
-    background-color: rgba(59, 130, 246, 0.1);
-}
-
-@media (max-width: 768px) {
-    .variant-stackOnMobile-true {
-        flex-direction: column;
-    }
+    min-height: inherit; /* Наследуем высоту для корректного отображения */
 }

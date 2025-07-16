@@ -17,6 +17,7 @@ import {
     AlignItemsStartIcon, AlignItemsCenterIcon, AlignItemsEndIcon, AlignItemsStretchIcon
 } from '../../utils/icons';
 import Checkbox from '../../ui/Checkbox';
+import Input from '../../ui/Input';
 
 const ContainerBlock = forwardRef(({ block, children, containerDropRef, isContainerOver, className, style, ...rest }, ref) => {
     const { props = {}, styles: blockStyles = {}, variants = {} } = block;
@@ -158,7 +159,8 @@ ContainerBlock.blockInfo = {
             label: 'Выравнивание по основной оси',
             options: [
                 { value: 'flex-start', label: 'Начало' }, { value: 'center', label: 'Центр' },
-                { value: 'flex-end', label: 'Конец' }, { value: 'space-between', label: 'Между' }
+                { value: 'flex-end', label: 'Конец' }, { value: 'space-between', label: 'Между' },
+                { value: 'space-around', label: 'Равномерно' }, { value: 'space-evenly', label: 'С отступами' }
             ]
         },
         alignItems: {
@@ -203,57 +205,52 @@ ContainerBlock.blockInfo = {
             </ToolbarButton>
         ];
     },
-    getEditor: ({ block, onChange }, helpers) => {
+    getEditor: ({ block, onChange }) => {
         const { props = {}, styles = {}, variants = {} } = block;
 
         const handlePropsChange = (newProps) => onChange({ props: { ...props, ...newProps } });
-        const handleStyleChange = (newStyles) => onChange({ styles: { ...(block.styles || {}), ...newStyles } });
-        const updateVariant = (name, value) => helpers.updateVariant(name, value);
-
-        const currentDirection = variants.direction || 'column';
-        const axisLabels = {
-            main: currentDirection === 'column' ? 'По вертикали' : 'По горизонтали',
-            cross: currentDirection === 'column' ? 'По горизонтали' : 'По вертикали',
-        };
-        const userPresets = ['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#ffffff', '#000000'];
+        const handleStyleChange = (newStyles) => onChange({ styles: { ...styles, ...newStyles } });
+        const handleVariantChange = (name, value) => onChange({ variants: { ...variants, [name]: value } });
 
         return (
             <Tabs>
                 <Tab title="Компоновка">
-                    <h4>{ContainerBlock.blockInfo.supportedVariants.align.label}</h4>
-                    <PresetSelector options={ContainerBlock.blockInfo.supportedVariants.align.options} value={variants.align || 'none'} onChange={(newValue) => updateVariant('align', newValue)} />
+                    <h4>Ширина блока</h4>
+                    <PresetSelector options={ContainerBlock.blockInfo.supportedVariants.align.options} value={variants.align || 'none'} onChange={(val) => handleVariantChange('align', val)} />
                     <hr />
-                    <h4>{ContainerBlock.blockInfo.supportedVariants.direction.label}</h4>
-                    <PresetSelector options={ContainerBlock.blockInfo.supportedVariants.direction.options} value={currentDirection} onChange={(newValue) => updateVariant('direction', newValue)} />
+                    <h4>Направление Flexbox</h4>
+                    <PresetSelector options={ContainerBlock.blockInfo.supportedVariants.direction.options} value={variants.direction || 'column'} onChange={(val) => handleVariantChange('direction', val)} />
                     <hr />
                     <h4>Выравнивание содержимого</h4>
-                    <Select label={axisLabels.main} options={ContainerBlock.blockInfo.supportedVariants.justifyContent.options} value={variants.justifyContent || 'flex-start'} onChange={(newValue) => updateVariant('justifyContent', newValue)} />
-                    <Select label={axisLabels.cross} options={ContainerBlock.blockInfo.supportedVariants.alignItems.options} value={variants.alignItems || 'stretch'} onChange={(newValue) => updateVariant('alignItems', newValue)} />
-                    <h4>Перенос</h4>
-                    <Checkbox
-                        label="Разрешить перенос на несколько строк"
-                        checked={!!block.variants.allowWrap}
-                        onChange={(e) => helpers.updateVariant('allowWrap', e.target.checked)}
-                    />
+                    <Select label="По основной оси" options={ContainerBlock.blockInfo.supportedVariants.justifyContent.options} value={variants.justifyContent || 'flex-start'} onChange={(val) => handleVariantChange('justifyContent', val)} />
+                    <Select label="По поперечной оси" options={ContainerBlock.blockInfo.supportedVariants.alignItems.options} value={variants.alignItems || 'stretch'} onChange={(val) => handleVariantChange('alignItems', val)} />
+                    <Checkbox label="Разрешить перенос на несколько строк" checked={!!variants.allowWrap} onChange={(e) => handleVariantChange('allowWrap', e.target.checked)} />
                 </Tab>
+
                 <Tab title="Стили">
-                    <h4>Цвета</h4>
-                    <ColorPicker label="Цвет фона" value={styles?.backgroundColor || ''} onChange={(color) => handleStyleChange({ backgroundColor: color })} presetColors={userPresets} />
-                    <ColorPicker label="Цвет текста" value={styles?.color || ''} onChange={(color) => handleStyleChange({ color: color })} presetColors={userPresets} />
+                    <h4>Фон</h4>
+                    <ColorPicker label="Цвет фона" value={styles.backgroundColor || ''} onChange={(color) => handleStyleChange({ backgroundColor: color })} />
+                    <ColorPicker label="Цвет текста" value={styles.color || ''} onChange={(color) => handleStyleChange({ color: color })} />
                     <hr />
                     <h4>Отступы</h4>
-                    <div>
-                        <label>Промежуток (gap)</label>
-                        <CustomUnitInput value={styles?.gap || ''} onChange={(newValue) => handleStyleChange({ gap: newValue })} />
-                    </div>
-                    <div>
-                        <label>Внутренние отступы (padding)</label>
-                        <CustomUnitInput value={styles?.padding || ''} onChange={(newValue) => handleStyleChange({ padding: newValue })} />
-                    </div>
+                    <CustomUnitInput label="Внешние (margin)" value={styles.margin || ''} onChange={(val) => handleStyleChange({ margin: val })} />
+                    <CustomUnitInput label="Внутренние (padding)" value={styles.padding || ''} onChange={(val) => handleStyleChange({ padding: val })} />
+                    <CustomUnitInput label="Промежуток (gap)" value={styles.gap || ''} onChange={(val) => handleStyleChange({ gap: val })} />
+                    <hr />
+                    <h4>Размеры</h4>
+                    <CustomUnitInput label="Мин. высота (min-height)" value={styles.minHeight || ''} onChange={(val) => handleStyleChange({ minHeight: val })} />
+                    <CustomUnitInput label="Макс. ширина (max-width)" value={styles.maxWidth || ''} onChange={(val) => handleStyleChange({ maxWidth: val })} />
+                    <hr />
+                    <h4>Границы и тени</h4>
+                    <CustomUnitInput label="Скругление (radius)" value={styles.borderRadius || ''} onChange={(val) => handleStyleChange({ borderRadius: val })} />
+                    <Input label="Граница (border)" placeholder="1px solid #ccc" value={styles.border || ''} onChange={(e) => handleStyleChange({ border: e.target.value })} />
+                    <Input label="Тень (box-shadow)" placeholder="0 2px 10px rgba(0,0,0,0.1)" value={styles.boxShadow || ''} onChange={(e) => handleStyleChange({ boxShadow: e.target.value })} />
                 </Tab>
+
                 <Tab title="Дополнительно">
-                    <h4>HTML-тег</h4>
-                    <Select label="Тег" value={props.as || 'div'} options={[{ label: 'div', value: 'div' }, { label: 'section', value: 'section' }]} onChange={(val) => handlePropsChange({ as: val })} />
+                    <Select label="HTML-тег" value={props.as || 'div'} options={[{ label: 'div', value: 'div' }, { label: 'section', value: 'section' }, { label: 'header', value: 'header' }, { label: 'footer', value: 'footer' }]} onChange={(val) => handlePropsChange({ as: val })} />
+                    <Input label="HTML-якорь (ID)" value={props.id || ''} onChange={(e) => handlePropsChange({ id: e.target.value })} />
+                    <Input label="Дополнительные CSS-классы" value={props.className || ''} onChange={(e) => handlePropsChange({ className: e.target.value })} />
                 </Tab>
             </Tabs>
         );

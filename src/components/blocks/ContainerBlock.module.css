@@ -28,13 +28,8 @@
 .variant-alignItems-center { align-items: center; }
 .variant-alignItems-flex-end { align-items: flex-end; }
 
-/* --- Перенос элементов --- */
-.variant-allowWrap-true { flex-wrap: wrap; }
-
 @media (max-width: 768px) {
-    /* Если у блока есть класс .variant-allowWrap-true... */
     .variant-allowWrap-true {
-        /* ... разрешаем перенос элементов */
         flex-wrap: wrap;
     }
 }

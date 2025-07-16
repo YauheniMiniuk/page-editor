@@ -3,7 +3,8 @@ import AnchorBlock from './AnchorBlock';
 import ButtonBlock from './ButtonBlock';
 import CardBlock from './CardBlock';
 import CodeBlock from './CodeBlock';
-import ColumnsBlockWrapped, { ColumnBlockWrapped } from './ColumnsBlock';
+import ColumnBlock from './ColumnBlock';
+import ColumnsBlock from './ColumnsBlock';
 import ContainerBlock from './ContainerBlock';
 import DividerBlock from './DividerBlock';
 import GalleryBlockWrapped, { GalleryImageBlockWrapped } from './GalleryBlock';
@@ -31,8 +32,8 @@ const ALL_COMPONENTS = [
   CodeBlock,
   AccordionBlockWrapped,
   AccordionItemBlockWrapped,
-  ColumnsBlockWrapped,
-  ColumnBlockWrapped,
+  ColumnsBlock,
+  ColumnBlock,
   GalleryBlockWrapped,
   GalleryImageBlockWrapped,
   IconBlock,

@@ -1,6 +1,25 @@
+.wrapper {
+    margin-bottom: 12px; /* Отступ снизу для разделения контролов */
+}
+
+.label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ui-text-secondary);
+}
+
 .presetGroup {
-  display: flex;
-  background-color: var(--bg-hover); /* Легкий фон для группы */
-  border-radius: var(--border-radius-md);
-  padding: 4px;
+    display: flex;
+    background-color: var(--bg-hover);
+    border-radius: var(--border-radius-md);
+    padding: 4px;
+    /* Позволяем кнопкам занимать равное пространство */
+    justify-content: stretch; 
+}
+
+/* Заставляем кнопки внутри группы растягиваться */
+.presetGroup > * {
+    flex-grow: 1;
 }
