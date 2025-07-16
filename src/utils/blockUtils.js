@@ -89,7 +89,7 @@ const findItemAndParentArrayRecursive = (blocks, targetId) => {
 /**
  * Находит путь к элементу списка в виде массива объектов-предков.
  */
-function findBlockPath(blocks, targetId, path = []) {
+export function findBlockPath(blocks, targetId, path = []) {
   for (const block of blocks) {
     const currentPath = [...path, block];
     if (block.id === targetId) {
@@ -465,4 +465,23 @@ export const moveBlock = (blocks, activeId, targetId, position) => {
   };
 
   return insert([...treeWithoutActive]);
+};
+
+/**
+ * Глубоко клонирует блок и всех его детей, назначая им новые уникальные ID.
+ * @param {object} block - Блок для клонирования.
+ * @returns {object} - Новый блок с новыми ID.
+ */
+export const deepCloneWithNewIds = (block) => {
+  const newBlock = {
+    ...JSON.parse(JSON.stringify(block)), // Глубокая копия для безопасности
+    id: nanoid(), // Новый ID для родительского блока
+  };
+
+  // Рекурсивно обновляем ID у всех дочерних элементов
+  if (newBlock.children && Array.isArray(newBlock.children)) {
+    newBlock.children = newBlock.children.map(child => deepCloneWithNewIds(child));
+  }
+
+  return newBlock;
 };

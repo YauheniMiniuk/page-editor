@@ -2,11 +2,14 @@ import React from 'react';
 import styles from './ToolbarButton.module.css';
 
 const ToolbarButton = ({ children, isActive = false, ...props }) => {
-  // Собираем классы: основной и активный, если нужно
-  const buttonClasses = `${styles.button} ${isActive ? styles.active : ''}`;
+  const className = [
+    styles.button,
+    isActive ? styles.active : '',
+    props.disabled ? styles.disabled : '',
+  ].join(' ').trim();
 
   return (
-    <button className={buttonClasses} {...props}>
+    <button className={className} {...props}>
       {children}
     </button>
   );

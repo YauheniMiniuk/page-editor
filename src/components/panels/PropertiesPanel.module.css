@@ -4,6 +4,7 @@
   background-color: #f8f9fa;
   border-left: 1px solid #e9ecef;
   overflow-y: auto;
+  flex: 1;
 }
 
 .settingGroup {

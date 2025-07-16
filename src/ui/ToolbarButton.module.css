@@ -4,28 +4,28 @@
   align-items: center;
   min-width: 32px;
   height: 32px;
+  padding: 0 6px;
+
+  font-size: 16px;
+  color: var(--ui-text-primary);
   background: transparent;
   border: none;
-  color: var(--ui-text-primary); 
   border-radius: var(--border-radius-sm);
   cursor: pointer;
-  font-size: 16px;
   transition: var(--transition-fast);
-  padding: 0 4px; /* Небольшой отступ для иконок-символов */
 }
 
-.button:hover {
+.button:hover:not(:disabled) {
   background-color: var(--bg-hover);
 }
 
-.button:disabled {
+.button:disabled,
+.button.disabled {
   color: var(--ui-text-secondary);
-  background-color: transparent;
   cursor: not-allowed;
 }
 
-/* Активное состояние */
-.button.active {
+.active {
   background-color: var(--accent-primary-subtle-bg);
   color: var(--ui-text-accent);
 }

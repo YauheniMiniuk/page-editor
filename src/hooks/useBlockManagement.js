@@ -10,7 +10,8 @@ import {
   removeListItem,
   outdentListItem,
   transformBlock,
-  updateListItemContent
+  updateListItemContent,
+  deepCloneWithNewIds
 } from '../utils/blockUtils';
 import { useHistory } from './useHistory';
 
@@ -31,23 +32,15 @@ const useBlockManagement = (initialBlocks = []) => {
   const [overDropZone, setOverDropZone] = useState(null);
   const [focusRequest, setFocusRequest] = useState(null);
   const [isInlineEditing, setIsInlineEditing] = useState(false);
+  const [copiedStyles, setCopiedStyles] = useState(null);
 
   const actions = useMemo(() => ({
     // Функции, которые только обновляют состояние, не завися от него
     update: (id, props) => setBlocks(prev => updateBlockRecursive(prev, id, props)),
     add: (targetId, block, pos) => setBlocks(prev => insertBlockRecursive(prev, targetId, block, pos)),
     swap: (id, dir) => {
-      // 1. Как и раньше, обновляем массив блоков
       setBlocks(prev => swapBlocksRecursive(prev, id, dir));
-
-      // 2. А теперь "магия": мы заставляем тулбар исчезнуть...
-      setSelectedBlockId(null);
-
-      // 3. ...и с помощью setTimeout(..., 0) говорим "появись обратно в самом ближайшем будущем",
-      // когда мы будем на 100% уверены, что DOM уже обновился.
-      setTimeout(() => {
-        setSelectedBlockId(id);
-      }, 0);
+      setSelectedBlockId(id);
     },
     indentListItem: (id) => {
       setBlocks(prev => indentListItem(prev, id));
@@ -60,6 +53,39 @@ const useBlockManagement = (initialBlocks = []) => {
     updateListItemContent: (id, content) => setBlocks(prev => updateListItemContent(prev, id, content)),
     replaceBlock: (blockId, newBlockObject) => {
       setBlocks(prev => prev.map(b => (b.id === blockId ? newBlockObject : b)));
+    },
+
+    duplicate: (id) => {
+      setBlocks(prevBlocks => {
+        const blockInfo = findBlockAndParent(prevBlocks, id);
+        if (!blockInfo) return prevBlocks;
+
+        const { block: blockToDuplicate } = blockInfo;
+        // Клонируем блок с новыми ID
+        const newBlock = deepCloneWithNewIds(blockToDuplicate);
+
+        // Вставляем его сразу после оригинала
+        return insertBlockRecursive(prevBlocks, id, newBlock, 'bottom');
+      });
+    },
+
+    copyStyles: (id) => {
+      const blockInfo = findBlockAndParent(blocks, id);
+      if (blockInfo?.block) {
+        // Копируем и стили, и варианты, так как они оба влияют на вид
+        const stylesToCopy = {
+          styles: blockInfo.block.styles,
+          variants: blockInfo.block.variants,
+        };
+        setCopiedStyles(stylesToCopy);
+        // Сюда можно добавить уведомление для пользователя, например, "Стили скопированы!"
+      }
+    },
+
+    pasteStyles: (id) => {
+      if (!copiedStyles) return; // Ничего не делаем, если буфер пуст
+      // updateBlockRecursive уже умеет глубоко сливать объекты, что идеально нам подходит
+      actions.update(id, copiedStyles);
     },
 
     // Функции, которые зависят от текущего состояния (blocks, selectedBlockId)
@@ -110,7 +136,7 @@ const useBlockManagement = (initialBlocks = []) => {
     clearFocusRequest: () => setFocusRequest(null),
     setOverDropZone
 
-  }), [selectedBlockId, setBlocks, undo, redo]);
+  }), [selectedBlockId, setBlocks, undo, redo, copiedStyles]);
 
   return {
     blocks,
@@ -118,6 +144,7 @@ const useBlockManagement = (initialBlocks = []) => {
     activeId,
     isInlineEditing,
     focusRequest,
+    copiedStyles,
     actions,
     canUndo,
     canRedo,

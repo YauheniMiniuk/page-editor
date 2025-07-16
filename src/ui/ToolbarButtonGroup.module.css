@@ -1,32 +1,6 @@
-/* Группа кнопок больше не нуждается в собственном фоне */
-.toolbarButtonGroup {
+.group {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 2px;
-}
-
-.toolbarButtonGroup > button {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 32px;
-  height: 32px;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  border-radius: var(--border-radius-sm);
-  cursor: pointer;
-  font-size: 16px;
-  transition: var(--transition-fast);
-}
-
-.toolbarButtonGroup > button:hover {
-  background-color: var(--bg-toolbar-hover);
-}
-
-.toolbarButtonGroup > button:disabled {
-  color: var(--text-secondary);
-  background-color: transparent;
-  cursor: not-allowed;
+  gap: 4px;
 }

@@ -1,0 +1,26 @@
+.wrapper {
+  display: flex;
+  background-color: var(--bg-hover);
+  border-radius: var(--border-radius-sm);
+  padding: 2px;
+  margin-bottom: 12px;
+}
+
+.button {
+  flex-grow: 1;
+  padding: 4px 8px;
+  border: none;
+  background-color: transparent;
+  color: var(--ui-text-secondary);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.button.active {
+  background-color: var(--bg-canvas);
+  color: var(--ui-text-primary);
+  box-shadow: var(--shadow-sm);
+}

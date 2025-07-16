@@ -10,10 +10,7 @@
 }
 
 .canvas {
-  min-height: 100%;
   width: 100%;
-  background-color: white;
-  border-radius: 4px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
   box-sizing: border-box;
   flex: 1;

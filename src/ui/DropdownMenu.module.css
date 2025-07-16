@@ -11,7 +11,8 @@
   height: 32px;
   background: transparent;
   border: none;
-  color: var(--text-primary);
+  color: var(--ui-text-primary);
+  /* Используем цвет для интерфейса */
   border-radius: var(--border-radius-sm);
   cursor: pointer;
   font-size: 18px;
@@ -19,56 +20,71 @@
 }
 
 .dropdownButton:hover {
-  background-color: var(--bg-toolbar-hover);
+  background-color: var(--bg-hover);
+  /* Теперь эта переменная есть */
 }
 
 .menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  min-width: 160px;
-  padding: 6px 0;
+  position: fixed;
+  min-width: 180px;
+  width: max-content;
+  padding: 6px;
   background-color: var(--bg-toolbar);
   border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-popup);
+  box-shadow: var(--shadow-md);
+  /* Используем тень среднего размера */
   border: 1px solid var(--border-color);
   z-index: 100;
-  animation: fadeIn 0.1s ease-out;
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+  transform-origin: top right;
+  opacity: 0;
+  transform: translateY(-5px) translateX(-100%);
+  pointer-events: none;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-2px); }
-  to   { opacity: 1; transform: translateY(0); }
+.menu[style*="opacity: 1"] {
+  transform: translateY(0) translateX(-100%);
+  pointer-events: auto;
 }
 
 .menuItem {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 6px 8px;
+  padding: 8px 12px;
   background: transparent;
   border: none;
   border-radius: var(--border-radius-sm);
-  color: var(--text-primary);
+  color: var(--ui-text-primary);
+  /* Основной цвет текста для UI */
   text-align: left;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: background-color 0.1s ease;
   font-size: 14px;
+  white-space: nowrap;
 }
 
-.menuItem:hover {
-  background-color: var(--bg-toolbar-hover);
+.menuItem:disabled {
+  color: var(--ui-text-secondary);
+  /* Вторичный цвет текста идеально подходит для disabled */
+  cursor: not-allowed;
+  background-color: transparent !important;
+}
+
+.menuItem:not(:disabled):hover {
+  background-color: var(--bg-hover);
+  /* Общий цвет для наведения */
 }
 
 .icon {
   margin-right: 10px;
   font-size: 16px;
+  display: inline-flex;
+  align-items: center;
 }
 
-.destructive {
-  color: var(--text-destructive);
-}
-
-.destructive:hover {
-  background-color: rgba(255, 92, 92, 0.08);
+.separator {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 6px 0;
 }

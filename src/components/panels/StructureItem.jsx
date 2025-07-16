@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import styles from './StructurePanel.module.css';
 import { BLOCK_COMPONENTS } from '../../utils/constants';
 import DropdownMenu from '../../ui/DropdownMenu';
+import { useBlockManager } from '../../contexts/BlockManagementContext';
 
 const StructureItem = ({
     block,
@@ -12,12 +13,12 @@ const StructureItem = ({
     selectedId,
     onToggleExpand,
     expandedIds,
-    actions,
-    // --- Новые пропсы ---
     structureNodesRef,
     dropIndicator,
 }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const { actions, copiedStyles } = useBlockManager();
 
     const { id, type, children } = block;
     const isExpanded = !!expandedIds[id];
@@ -72,7 +73,29 @@ const StructureItem = ({
     });
 
     const menuItems = [
-        { label: 'Удалить блок', icon: '🗑️', onClick: () => actions.delete(id), isDestructive: true },
+        {
+            label: 'Дублировать',
+            icon: '📄',
+            onClick: () => actions.duplicate(id),
+        },
+        {
+            label: 'Копировать стили',
+            icon: '🎨',
+            onClick: () => actions.copyStyles(id),
+        },
+        {
+            label: 'Вставить стили',
+            icon: '🖌️',
+            onClick: () => actions.pasteStyles(id),
+            disabled: !copiedStyles, // Делаем неактивным, если стили не скопированы
+        },
+        { isSeparator: true },
+        {
+            label: 'Удалить блок',
+            icon: '🗑️',
+            onClick: () => actions.delete(id),
+            isDestructive: true,
+        },
     ];
 
     return (

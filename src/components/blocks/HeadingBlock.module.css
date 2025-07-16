@@ -1,28 +1,42 @@
 .heading {
     font-weight: 700;
     line-height: 1.2;
-    margin: 1.5em 0 0.5em;
-    color: #111827; /* Цвет по умолчанию */
-    min-width: 1px;
+    color: #111827;
+    position: relative;
+
+    /* Чтобы блок был кликабельным даже без текста */
+    min-height: 1.2em;
+    min-width: 2ch;
+    display: inline-block;
 }
 
-/* .heading:focus {
-    border: none;
-    outline: 2px solid rgba(59, 130, 246, 0.7);
-    outline-offset: -2px;
-    border-radius: 4px;
-} */
 .heading span {
+    display: inline-block;
+    min-height: 1.2em;
+    min-width: 2ch;
+}
+.heading:focus,
+.heading span:focus {
     border: none;
     outline: none;
 }
 
+/* --- Плейсхолдер при пустом содержимом --- */
+.heading span:empty::before {
+    content: 'Введите заголовок...';
+    color: #9ca3af; /* Тускло-серый */
+    pointer-events: none;
+    user-select: none;
+    display: block;
+}
+
+/* --- Размеры заголовков --- */
 .h1 { font-size: 2.25rem; } /* 36px */
 .h2 { font-size: 1.875rem; } /* 30px */
-.h3 { font-size: 1.5rem; } /* 24px */
-.h4 { font-size: 1.25rem; } /* 20px */
+.h3 { font-size: 1.5rem; }   /* 24px */
+.h4 { font-size: 1.25rem; }  /* 20px */
 .h5 { font-size: 1.125rem; } /* 18px */
-.h6 { font-size: 1rem; } /* 16px */
+.h6 { font-size: 1rem; }     /* 16px */
 
 /* --- Варианты выравнивания --- */
 .variant-textAlign-left { text-align: left; }

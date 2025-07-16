@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import classNames from 'classnames';
 import { motion } from 'framer-motion'; // <-- Импортируем motion
@@ -54,6 +54,24 @@ export const withBlock = (BlockComponent) => {
             actions.select(block.id);
         };
 
+        const handlePaste = useCallback((e) => {
+            const target = e.target;
+            if (!target.isContentEditable) return;
+
+            e.preventDefault();
+            const text = e.clipboardData.getData('text/plain');
+
+            const selection = window.getSelection();
+            if (!selection?.rangeCount) return;
+
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(document.createTextNode(text));
+            range.collapse(false);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }, []);
+
         const finalClassName = classNames(
             getVariantClasses(block.variants, blockStyles),
             {
@@ -99,6 +117,7 @@ export const withBlock = (BlockComponent) => {
 
                     // Остальные пропсы
                     onClick={mode === 'edit' ? handleBlockClick : undefined}
+                    onPaste={handlePaste}
                     data-block-id={block.id}
                 />
             </>

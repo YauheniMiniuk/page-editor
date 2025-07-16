@@ -6,6 +6,7 @@ import { findBlockAndParent } from '../../utils/blockUtils';
 import DropdownMenu from '../../ui/DropdownMenu';
 import ToolbarButton from '../../ui/ToolbarButton';
 import { DragHandleIcon } from '../../utils/icons';
+import ToolbarButtonGroup from '../../ui/ToolbarButtonGroup';
 
 const TOOLBAR_MARGIN = 8; // Отступ от блока в пикселях
 const portalRoot = document.getElementById('portal-root');
@@ -14,7 +15,7 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
   const toolbarRef = useRef(null);
   const [style, setStyle] = useState({ opacity: 0 }); // Начинаем с невидимого состояния
 
-  const { blocks, actions } = useBlockManager();
+  const { blocks, actions, copiedStyles  } = useBlockManager();
 
   const blockInfo = findBlockAndParent(blocks, selectedBlock.id);
   const parent = blockInfo?.parent;
@@ -23,6 +24,24 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
   const isLast = blockInfo?.index === siblings.length - 1;
 
   const menuItems = [
+    {
+      label: 'Дублировать',
+      icon: '📄',
+      onClick: () => actions.duplicate(selectedBlock.id),
+    },
+    {
+      label: 'Копировать стили',
+      icon: '🎨',
+      onClick: () => actions.copyStyles(selectedBlock.id),
+    },
+    {
+      label: 'Вставить стили',
+      icon: '🖌️',
+      onClick: () => actions.pasteStyles(selectedBlock.id),
+      // Делаем пункт неактивным, если в "буфере обмена" пусто
+      disabled: !copiedStyles,
+    },
+    { isSeparator: true }, // Убедись, что твой DropdownMenu это поддерживает
     {
       label: 'Удалить блок',
       icon: '🗑️',
@@ -109,8 +128,7 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
         <DragHandleIcon />
       </div>
 
-      {/* Эти кнопки уже "умные" и сами останавливают всплытие */}
-      <div className={styles.toolbarButtonGroup}>
+      <ToolbarButtonGroup>
         <ToolbarButton title="Переместить вверх" onClick={handleSwapUp} disabled={isFirst}>
           ↑
         </ToolbarButton>
@@ -122,7 +140,7 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
             ⤴
           </ToolbarButton>
         )}
-      </div>
+      </ToolbarButtonGroup>
 
       {React.Children.count(children) > 0 && (
         <div className={styles.toolbarSeparator} />
@@ -132,10 +150,9 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
 
       <div className={styles.toolbarSeparator} />
 
-      {/* Оставляем обработчик только на группе с выпадающим меню */}
-      <div className={styles.toolbarButtonGroup}>
+      <ToolbarButtonGroup>
         <DropdownMenu triggerContent="⋮" items={menuItems} />
-      </div>
+      </ToolbarButtonGroup>
     </div>
   );
 
