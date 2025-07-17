@@ -6,7 +6,7 @@ import { useBlockManager } from '../../contexts/BlockManagementContext';
 import { useDroppable } from '@dnd-kit/core';
 import { findBlockPath } from '../../utils/blockUtils'; // 1. Импортируем твою функцию
 
-const StructurePanel = ({ structureNodesRef, dropIndicator }) => {
+const StructurePanel = ({ structureNodesRef, dropIndicator, onSaveAsPattern }) => {
   const { blocks, actions, selectedBlockId, selectedBlock, copiedStyles } = useBlockManager();
   const [expandedIds, setExpandedIds] = useState({});
 
@@ -28,11 +28,11 @@ const StructurePanel = ({ structureNodesRef, dropIndicator }) => {
     if (selectedBlockId) {
       // Находим путь в виде массива объектов блоков
       const pathObjects = findBlockPath(blocks, selectedBlockId);
-      
+
       if (pathObjects) {
         // Преобразуем массив объектов в массив ID и убираем ID самого элемента
         const parentIds = pathObjects.map(block => block.id).slice(0, -1);
-        
+
         setExpandedIds(prevExpanded => {
           const newExpanded = { ...prevExpanded };
           parentIds.forEach(id => {
@@ -60,6 +60,7 @@ const StructurePanel = ({ structureNodesRef, dropIndicator }) => {
             actions={actions}
             structureNodesRef={structureNodesRef}
             dropIndicator={dropIndicator}
+            onSaveAsPattern={onSaveAsPattern}
           />
         ))}
       </ul>

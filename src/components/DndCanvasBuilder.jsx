@@ -14,11 +14,11 @@ import {
 } from '@dnd-kit/core';
 import { nanoid } from 'nanoid';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useDebouncedCallback } from 'use-debounce';
+import html2canvas from 'html2canvas';
 
 import styles from './DndCanvasBuilder.module.css';
 import { BLOCK_TYPES, AVAILABLE_BLOCKS, BLOCK_COMPONENTS } from '../utils/constants';
-import { findBlockAndParent, generatePreviewLayout, insertBlockRecursive, isAncestor, moveBlock, removeBlockRecursive } from '../utils/blockUtils';
+import { deepCloneWithNewIds, findBlockAndParent, generatePreviewLayout, insertBlockRecursive, isAncestor, moveBlock, removeBlockRecursive } from '../utils/blockUtils';
 import useBlockManagement from '../hooks/useBlockManagement';
 
 import SidebarElements from './sidebar/SidebarElements';
@@ -31,6 +31,7 @@ import Header from './Header';
 import { setCursorPosition } from '../utils/domUtils';
 import indicatorStyles from './DropIndicator.module.css';
 import classNames from 'classnames';
+import ElementsAndPatternsPanel from './sidebar/ElementsAndPatternsPanel';
 
 const portalRoot = document.getElementById('portal-root');
 const PROXIMITY_THRESHOLD_RATIO = 0.6;
@@ -91,7 +92,7 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
   const location = useLocation();
 
   // Получаем состояние и единый объект `actions` из нашего хука
-  const { blocks, selectedBlockId, activeId, focusRequest, actions, canUndo, canRedo } = useBlockManager();
+  const { blocks, selectedBlockId, activeId, focusRequest, actions, canUndo, canRedo, patterns } = useBlockManager();
   const [lastSavedBlocks, setLastSavedBlocks] = useState(null);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -329,6 +330,80 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
     setPropertiesPanelVisible(prev => !prev);
   };
 
+  const handleSaveAsPattern = async () => {
+    if (!selectedBlockId) return alert('Сначала выберите блок');
+    const patternName = prompt('Введите название для нового паттерна:');
+    if (!patternName) return;
+
+    const nodeToCapture = document.querySelector(`[data-block-id="${selectedBlockId}"]`);
+    if (!nodeToCapture) return;
+
+    try {
+      // --- ИЗМЕНЕНИЯ ЗДЕСЬ ---
+      const canvas = await html2canvas(nodeToCapture, {
+        backgroundColor: '#ffffff',
+        // Увеличиваем масштаб для высокой четкости
+        scale: 2,
+        // Помогает, если в блоке есть картинки с других доменов
+        useCORS: true
+      });
+
+      // Конвертируем canvas в Blob в формате PNG
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+      // --- КОНЕЦ ИЗМЕНЕНИЙ ---
+
+      const { block: blockData } = findBlockAndParent(blocks, selectedBlockId);
+
+      const formData = new FormData();
+      formData.append('name', patternName);
+      formData.append('content', JSON.stringify(blockData));
+      // Меняем расширение файла на .png
+      formData.append('previewImage', blob, `${patternName.replace(/\s+/g, '-')}.png`);
+
+      const response = await fetch('/api/patterns', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Ошибка сохранения');
+      }
+
+      let newPattern = await response.json();
+
+      if (newPattern.preview_image) {
+        newPattern.previewImage = newPattern.preview_image;
+        delete newPattern.preview_image;
+      }
+
+
+      actions.addPattern(newPattern);
+      alert('Паттерн успешно сохранен!');
+
+    } catch (error) {
+      console.error(error);
+      alert(`Произошла ошибка при сохранении: ${error.message}`);
+    }
+  };
+
+  const handleDeletePattern = async (patternId) => {
+    if (!window.confirm('Вы уверены, что хотите удалить этот паттерн?')) return;
+
+    try {
+      const response = await fetch(`/api/patterns/${patternId}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Ошибка удаления');
+
+      // Обновляем глобальное состояние через action
+      actions.removePattern(patternId);
+      alert('Паттерн удален.');
+    } catch (error) {
+      console.error(error);
+      alert('Не удалось удалить паттерн.');
+    }
+  };
+
   const isDirty = useMemo(() => {
     // Если еще не загрузили данные, считаем, что изменений нет
     if (lastSavedBlocks === null) return false;
@@ -355,6 +430,46 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [actions]);
+
+  useEffect(() => {
+    const fetchPatterns = async () => {
+      try {
+        const response = await fetch('/api/patterns');
+        if (!response.ok) {
+          throw new Error('Ошибка загрузки паттернов');
+        }
+        const loadedPatterns = await response.json();
+
+        // --- ВОТ РЕШЕНИЕ ---
+        // Проходим по каждому паттерну и парсим его `content`, если это строка.
+        const processedPatterns = loadedPatterns.map(pattern => {
+          if (pattern.content && typeof pattern.content === 'string') {
+            try {
+              // Превращаем строку в объект
+              return { ...pattern, previewImage: '/api' + pattern.preview_image, content: JSON.parse(pattern.content) };
+            } catch (e) {
+              console.error(`Ошибка парсинга content для паттерна ID ${pattern.id}:`, e);
+              return pattern; // В случае ошибки оставляем как есть
+            }
+          }
+          return pattern;
+        });
+        // --- КОНЕЦ РЕШЕНИЯ ---
+
+        // В стейт попадут уже обработанные паттерны с content в виде объекта
+        actions.setPatterns(processedPatterns);
+
+      } catch (error) {
+        console.error('Ошибка при загрузке паттернов:', error);
+      }
+    };
+
+    fetchPatterns();
+  }, []);
+
+  useEffect(() => {
+    console.log('🎨 Состояние patterns в контексте изменилось:', patterns);
+  }, [patterns]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 10 } }));
   const selectedBlock = useMemo(() => findBlockAndParent(blocks, selectedBlockId)?.block || null, [blocks, selectedBlockId]);
@@ -405,9 +520,6 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
     }
 
     const isStructureDrag = active.data.current?.context === 'structure';
-
-    const activeContext = active.data.current?.context;
-    const overContext = over.data.current?.context;
 
     // --- ЛОГИКА ДЛЯ ПАНЕЛИ СТРУКТУРЫ ---
     if (isStructureDrag) {
@@ -469,7 +581,7 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
 
     // --- ЛОГИКА ДЛЯ КАНВАСА (ТВОЙ ОРИГИНАЛЬНЫЙ КОД) ---
     // Не позволяем тащить из структуры на канвас (это можно будет реализовать позже)
-    if (activeContext === 'structure') return;
+    if (isStructureDrag) return;
 
     if (!active.rect.current.translated) {
       return;
@@ -477,9 +589,15 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
 
     // --- ШАГ 1: Определяем перетаскиваемый блок и его правила ---
     const activeData = active.data.current;
-    const draggedBlockType = activeData.isSidebarItem
-      ? activeData.type
-      : activeData.block.type;
+    let draggedBlockType;
+    if (activeData.isPattern) {
+      draggedBlockType = activeData.content?.type;
+    } else {
+      draggedBlockType = activeData.isNew
+        ? activeData.type
+        : activeData.block.type;
+    }
+
     const { blockInfo: draggedBlockInfo } = BLOCK_COMPONENTS[draggedBlockType] || {};
 
     // --- ШАГ 2: Определяем контейнер для сброса ---
@@ -499,6 +617,8 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
 
     // --- ШАГ 3: Валидация ---
     let { blockInfo: containerInfo } = BLOCK_COMPONENTS[container.type] || {};
+    console.log('Инфо контейнера: ', containerInfo);
+    console.log('Инфо блока: ', draggedBlockInfo);
     if (containerInfo?.allowedBlocks && !containerInfo.allowedBlocks.includes(draggedBlockType)) return;
     if (draggedBlockInfo?.parent && !draggedBlockInfo.parent.includes(container.type)) return;
 
@@ -644,21 +764,45 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
     if (!position || !targetId) return;
 
     let blockToInsert;
-    const isNewBlock = active.data.current.isSidebarItem;
-    if (isNewBlock) {
-      const info = AVAILABLE_BLOCKS.find(b => b.type === active.data.current.type);
-      if (!info) return;
-      blockToInsert = { id: nanoid(), ...info.defaultData() };
-    } else {
-      blockToInsert = findBlockAndParent(blocks, active.id)?.block;
-    }
-    if (!blockToInsert) return;
+    const activeData = active.data.current; // Получаем данные перетаскиваемого элемента
+    console.log('Активный элемент:', active);
 
-    const initialBlocks = isNewBlock ? blocks : removeBlockRecursive(blocks, active.id);
-    const newBlocks = insertBlockRecursive(initialBlocks, targetId, blockToInsert, position);
-    if (newBlocks) {
-      actions.setBlocks(newBlocks);
-      actions.select(blockToInsert.id);
+    // --- ВОТ ГЛАВНОЕ ИЗМЕНЕНИЕ ---
+
+    if (activeData.isNew) {
+      // Это НОВЫЙ элемент (блок или паттерн)
+      if (activeData.isPattern) {
+        // 1. ЭТО ПАТТЕРН
+        // Глубоко клонируем его структуру и назначаем НОВЫЕ ID всем вложенным блокам.
+        // Это критически важно, чтобы избежать дубликатов ID на странице.
+        blockToInsert = deepCloneWithNewIds(activeData.content);
+      } else {
+        // 2. ЭТО ОБЫЧНЫЙ НОВЫЙ БЛОК
+        const info = AVAILABLE_BLOCKS.find(b => b.type === activeData.type);
+        if (!info) return;
+        // Создаем блок по умолчанию, как и раньше
+        blockToInsert = { id: nanoid(), ...info.defaultData() };
+      }
+
+      // Вставляем новый элемент. Исходный массив блоков не меняем.
+      const newBlocks = insertBlockRecursive(blocks, targetId, blockToInsert, position);
+      if (newBlocks) {
+        actions.setBlocks(newBlocks);
+        actions.select(blockToInsert.id); // Выделяем новый элемент
+      }
+
+    } else {
+      // ЭТО СУЩЕСТВУЮЩИЙ элемент, который мы перемещаем
+      blockToInsert = findBlockAndParent(blocks, active.id)?.block;
+      if (!blockToInsert) return;
+
+      // Сначала удаляем старый блок, потом вставляем в новое место
+      const initialBlocks = removeBlockRecursive(blocks, active.id);
+      const newBlocks = insertBlockRecursive(initialBlocks, targetId, blockToInsert, position);
+      if (newBlocks) {
+        actions.setBlocks(newBlocks);
+        actions.select(blockToInsert.id); // Выделяем перемещенный блок
+      }
     }
   };
 
@@ -704,11 +848,12 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
             >
               <div className={styles.panelContentWrapper}>
                 {/* А контент управляется `panelContent` */}
-                {panelContent === 'elements' && <SidebarElements />}
+                {panelContent === 'elements' && <ElementsAndPatternsPanel patterns={patterns} onDeletePattern={handleDeletePattern} />}
                 {panelContent === 'structure' && (
                   <StructurePanel
                     structureNodesRef={structureNodesRef}
                     dropIndicator={dropIndicator}
+                    onSaveAsPattern={handleSaveAsPattern}
                   />
                 )}
               </div>
@@ -717,7 +862,7 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
         </AnimatePresence>
 
         <div className={styles.canvasContainer}>
-          <Canvas mode={mode} blockNodesRef={blockNodesRef} />
+          <Canvas mode={mode} blockNodesRef={blockNodesRef} onSaveAsPattern={handleSaveAsPattern} />
         </div>
 
         <AnimatePresence>

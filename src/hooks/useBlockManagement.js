@@ -26,6 +26,7 @@ const useBlockManagement = (initialBlocks = []) => {
     canRedo
   } = useHistory(initialBlocks);
 
+  const [patterns, setPatterns] = useState([]);
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const [activeDragItem, setActiveDragItem] = useState(null);
@@ -33,6 +34,14 @@ const useBlockManagement = (initialBlocks = []) => {
   const [focusRequest, setFocusRequest] = useState(null);
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const [copiedStyles, setCopiedStyles] = useState(null);
+
+  const addPattern = useCallback((newPattern) => {
+    setPatterns(prev => [...prev, newPattern]);
+  }, []); // setPatterns стабильна, зависимость не нужна
+
+  const removePattern = useCallback((patternId) => {
+    setPatterns(prev => prev.filter(p => p.id !== patternId));
+  }, []);
 
   const actions = useMemo(() => ({
     // Функции, которые только обновляют состояние, не завися от него
@@ -134,7 +143,11 @@ const useBlockManagement = (initialBlocks = []) => {
 
     // Простые функции без зависимостей
     clearFocusRequest: () => setFocusRequest(null),
-    setOverDropZone
+    setOverDropZone,
+
+    setPatterns,
+    addPattern,
+    removePattern,
 
   }), [selectedBlockId, setBlocks, undo, redo, copiedStyles]);
 
@@ -145,6 +158,7 @@ const useBlockManagement = (initialBlocks = []) => {
     isInlineEditing,
     focusRequest,
     copiedStyles,
+    patterns,
     actions,
     canUndo,
     canRedo,

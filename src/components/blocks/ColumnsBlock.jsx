@@ -76,7 +76,7 @@ ColumnsBlock.blockInfo = {
     type: 'core/columns',
     variants: {
       columns: 2,
-      gap: '2rem',
+      gap: '0px',
       verticalAlign: 'flex-start',
       stackOnMobile: true,
     },

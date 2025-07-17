@@ -5,14 +5,14 @@ import { useBlockManager } from '../../contexts/BlockManagementContext';
 import { findBlockAndParent } from '../../utils/blockUtils';
 import DropdownMenu from '../../ui/DropdownMenu';
 import ToolbarButton from '../../ui/ToolbarButton';
-import { CopyStylesIcon, DragHandleIcon, DuplicateIcon, PasteStylesIcon } from '../../utils/icons';
+import { CopyStylesIcon, DragHandleIcon, DuplicateIcon, PasteStylesIcon, SaveIcon } from '../../utils/icons';
 import ToolbarButtonGroup from '../../ui/ToolbarButtonGroup';
 import { DeleteIcon, TrashIcon } from 'lucide-react';
 
 const TOOLBAR_MARGIN = 8; // Отступ от блока в пикселях
 const portalRoot = document.getElementById('portal-root');
 
-const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children }) => {
+const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, onSaveAsPattern, children }) => {
   const toolbarRef = useRef(null);
   const [style, setStyle] = useState({ opacity: 0 }); // Начинаем с невидимого состояния
 
@@ -41,6 +41,8 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, children 
       onClick: () => actions.pasteStyles(selectedBlock.id),
       disabled: !copiedStyles,
     },
+    { isSeparator: true },
+    { label: 'Сохранить как паттерн', icon: <SaveIcon />, onClick: onSaveAsPattern },
     { isSeparator: true },
     {
       label: 'Удалить блок',

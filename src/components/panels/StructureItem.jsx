@@ -5,6 +5,8 @@ import styles from './StructurePanel.module.css';
 import { BLOCK_COMPONENTS } from '../../utils/constants';
 import DropdownMenu from '../../ui/DropdownMenu';
 import { useBlockManager } from '../../contexts/BlockManagementContext';
+import { CopyStylesIcon, DuplicateIcon, PasteStylesIcon, SaveIcon } from '../../utils/icons';
+import { TrashIcon } from 'lucide-react';
 
 const StructureItem = ({
     block,
@@ -15,6 +17,7 @@ const StructureItem = ({
     expandedIds,
     structureNodesRef,
     dropIndicator,
+    onSaveAsPattern,
 }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -75,24 +78,26 @@ const StructureItem = ({
     const menuItems = [
         {
             label: 'Дублировать',
-            icon: '📄',
+            icon: <DuplicateIcon />,
             onClick: () => actions.duplicate(id),
         },
         {
             label: 'Копировать стили',
-            icon: '🎨',
+            icon: <CopyStylesIcon />,
             onClick: () => actions.copyStyles(id),
         },
         {
             label: 'Вставить стили',
-            icon: '🖌️',
+            icon: <PasteStylesIcon />,
             onClick: () => actions.pasteStyles(id),
-            disabled: !copiedStyles, // Делаем неактивным, если стили не скопированы
+            disabled: !copiedStyles,
         },
+        { isSeparator: true },
+        { label: 'Сохранить как паттерн', icon: <SaveIcon />, onClick: onSaveAsPattern },
         { isSeparator: true },
         {
             label: 'Удалить блок',
-            icon: '🗑️',
+            icon: <TrashIcon />,
             onClick: () => actions.delete(id),
             isDestructive: true,
         },

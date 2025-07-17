@@ -11,7 +11,7 @@ export const withBlock = (BlockComponent) => {
     const MotionBlockComponent = motion(BlockComponent);
     const WrappedComponent = React.forwardRef((props, ref) => {
         // --- Получаем всё из одного места ---
-        const { block, mode, blockNodesRef, layoutDirection } = props;
+        const { block, mode, blockNodesRef, layoutDirection, onSaveAsPattern } = props;
         const { actions, isInlineEditing, activeId, selectedBlockId } = useBlockManager();
 
         // --- Вычисляем состояния прямо здесь ---
@@ -90,12 +90,11 @@ export const withBlock = (BlockComponent) => {
         return (
             <>
                 {isEditMode && isSelected && (
-                    <BlockToolbar targetRef={blockRef} selectedBlock={block} dragHandleListeners={listeners}>
+                    <BlockToolbar targetRef={blockRef} selectedBlock={block} dragHandleListeners={listeners} onSaveAsPattern={onSaveAsPattern}>
                         {toolbarContent}
                     </BlockToolbar>
                 )}
 
-                {/* --- ИЗМЕНЕНИЕ 3: Используем MotionBlockComponent и передаем ему motion-пропсы --- */}
                 <MotionBlockComponent
                     {...props}
                     actions={actions}

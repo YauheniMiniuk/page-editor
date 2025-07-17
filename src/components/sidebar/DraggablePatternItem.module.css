@@ -1,0 +1,90 @@
+.patternItem {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    cursor: grab;
+    transition: all 0.2s ease;
+    background-color: var(--bg-canvas);
+    display: flex;
+    flex-direction: column;
+}
+
+.patternItem:hover {
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.patternItem:active {
+    cursor: grabbing;
+}
+
+.previewImage {
+    width: 100%;
+    display: block;
+    aspect-ratio: 4 / 3;
+    object-fit: contain;
+    background-color: var(--bg-hover);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Распределяем элементы по краям */
+  padding: 4px 8px;
+  gap: 8px;
+}
+
+.patternName {
+  font-size: 13px;
+  color: var(--ui-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1; /* Позволяем названию занимать всё доступное место */
+  text-align: left; /* Выравниваем текст по левому краю */
+}
+
+/* Стили для кнопки могут быть уже в общем файле DropdownMenu.module.css,
+   но если нужно переопределить, можно сделать это здесь */
+.footer :global(.dropdownButton) { /* Используем :global для доступа к классу из другого модуля */
+  background: none;
+  border: none;
+  padding: 4px;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  display: flex;
+  color: var(--ui-text-secondary);
+  transition: all 0.1s ease;
+}
+
+.footer :global(.dropdownButton):hover {
+  background-color: var(--bg-hover);
+  color: var(--ui-text-primary);
+}
+
+.destructiveButton {
+  color: var(--text-danger) !important; /* Убедимся, что цвет применится */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menuButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ui-text-secondary);
+  transition: all 0.1s ease;
+}
+
+.menuButton:hover {
+  background-color: var(--bg-hover);
+  color: var(--ui-text-primary);
+}

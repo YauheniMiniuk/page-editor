@@ -7,7 +7,7 @@ import useBlockManagement from '../../hooks/useBlockManagement';
 import { useBlockManager } from '../../contexts/BlockManagementContext';
 
 // 1. Canvas теперь просто принимает `mode` и наш единый `editorContext`
-const Canvas = ({ mode, blockNodesRef }) => {
+const Canvas = ({ mode, blockNodesRef, onSaveAsPattern }) => {
   const isEditMode = mode === 'edit';
 
   // 2. Деструктурируем `blocks` и `actions` из контекста.
@@ -57,6 +57,7 @@ const Canvas = ({ mode, blockNodesRef }) => {
               isLast={index === blocks.length - 1}
               motionProps={motionProps}
               blockNodesRef={blockNodesRef}
+              onSaveAsPattern={onSaveAsPattern}
             />
           ))
         ) : (

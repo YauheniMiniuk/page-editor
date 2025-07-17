@@ -2,7 +2,7 @@ import React from 'react';
 import { BLOCK_COMPONENTS } from '../../utils/constants';
 import { useBlockManager } from '../../contexts/BlockManagementContext';
 
-const BlockRenderer = ({ block, mode, blockNodesRef, layoutDirection = 'column', ...rest }) => {
+const BlockRenderer = ({ block, mode, blockNodesRef, layoutDirection = 'column', onSaveAsPattern, ...rest }) => {
     const ComponentToRender = BLOCK_COMPONENTS[block.type];
     const { blockInfo } = ComponentToRender || {};
 
@@ -30,6 +30,7 @@ const BlockRenderer = ({ block, mode, blockNodesRef, layoutDirection = 'column',
             mode={mode}
             layoutDirection={currentLayoutDirection}
             blockNodesRef={blockNodesRef}
+            onSaveAsPattern={onSaveAsPattern}
         />
     ));
 
@@ -39,6 +40,7 @@ const BlockRenderer = ({ block, mode, blockNodesRef, layoutDirection = 'column',
             mode={mode}
             layoutDirection={currentLayoutDirection}
             blockNodesRef={blockNodesRef}
+            onSaveAsPattern={onSaveAsPattern}
             {...rest}
         >
             {renderedChildren}

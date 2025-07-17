@@ -1,0 +1,54 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Занимаем всю высоту родителя */
+}
+
+/* --- Контейнер вкладок --- */
+.tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 8px;
+    /* Важно, чтобы вкладки не сжимались, если их будет много */
+    flex-shrink: 0; 
+}
+
+.tabs button {
+    padding: 10px 16px;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    color: var(--ui-text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+
+.tabs button:hover {
+    color: var(--ui-text-primary);
+}
+
+.tabs button.activeTab {
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
+}
+
+/* --- Общий стиль для контентной части --- */
+.content {
+    /* Единый отступ для обоих вкладок */
+    padding: 16px; 
+    /* Заставляем занимать всю оставшуюся высоту и добавляем скролл */
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+/* --- БЫЛО: .patternsGrid, СТАЛО: .inserterGrid --- */
+/* Общий класс для сетки блоков и паттернов */
+.inserterGrid {
+    display: grid;
+    /* Используем разные переменные для управления шириной */
+    grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-min-width, 90px), 1fr));
+    gap: 12px;
+}

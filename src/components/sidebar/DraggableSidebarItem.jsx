@@ -5,7 +5,7 @@ import styles from './DraggableSidebarItem.module.css';
 const DraggableSidebarItem = ({ type, label, icon }) => {
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `sidebar-${type}`,
-    data: { type, isSidebarItem: true, context: 'sidebar' },
+    data: { type, isNew: true, context: 'sidebar' },
   });
 
   return (

@@ -473,12 +473,20 @@ export const moveBlock = (blocks, activeId, targetId, position) => {
  * @returns {object} - Новый блок с новыми ID.
  */
 export const deepCloneWithNewIds = (block) => {
+  // ВНИМАТЕЛЬНО ПРОВЕРЬТЕ ЭТО УСЛОВИЕ
+  // Должно быть именно `!==` (не равно)
+  if (!block || typeof block !== 'object') {
+    console.error("deepCloneWithNewIds получил некорректные данные:", block);
+    return { id: nanoid(), type: 'core/unknown', content: 'Ошибка данных блока' };
+  }
+
+  // Создаем копию с новым ID
   const newBlock = {
-    ...JSON.parse(JSON.stringify(block)), // Глубокая копия для безопасности
-    id: nanoid(), // Новый ID для родительского блока
+    ...JSON.parse(JSON.stringify(block)),
+    id: nanoid(),
   };
 
-  // Рекурсивно обновляем ID у всех дочерних элементов
+  // Рекурсивно вызываем функцию для всех дочерних элементов
   if (newBlock.children && Array.isArray(newBlock.children)) {
     newBlock.children = newBlock.children.map(child => deepCloneWithNewIds(child));
   }

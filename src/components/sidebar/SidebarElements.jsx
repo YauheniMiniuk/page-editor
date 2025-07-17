@@ -1,18 +1,22 @@
-// src/components/sidebar/SidebarElements.jsx
 import React from 'react';
-import styles from './SidebarElements.module.css';
+// 1. Импортируем стили из панели
+import styles from './ElementsAndPatternsPanel.module.css';
+import DraggableSidebarItem from './DraggableSidebarItem';
 import { AVAILABLE_BLOCKS } from '../../utils/constants';
-import DraggableSidebarItem from './DraggableSidebarItem'; // Импортируем новый/обновленный компонент
 
 const SidebarElements = () => {
   return (
-    <div className={styles.sidebarElements}>
+    // 2. Применяем общий класс и устанавливаем переменную для ширины блоков
+    <div 
+      className={styles.inserterGrid} 
+      style={{ '--grid-item-min-width': '80px' }}
+    >
       {AVAILABLE_BLOCKS.map(block => (
         <DraggableSidebarItem
-          key={block.type} // Ключ по-прежнему уникален
+          key={block.type}
           type={block.type}
           label={block.label}
-          icon={block.icon} // Передаем иконку, если она есть
+          icon={block.icon}
         />
       ))}
     </div>
