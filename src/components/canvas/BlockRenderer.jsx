@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { BLOCK_COMPONENTS } from '../../utils/constants';
 import { useBlockManager } from '../../contexts/BlockManagementContext';
 
@@ -48,4 +48,4 @@ const BlockRenderer = ({ block, mode, blockNodesRef, layoutDirection = 'column',
     );
 };
 
-export default BlockRenderer;
+export default memo(BlockRenderer);

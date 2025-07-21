@@ -13,10 +13,10 @@
 
 /* --- Размеры шрифта (пресеты) --- */
 /* `has-` - это классический префикс Gutenberg */
-.variant-fontSize-small { font-size: 0.875rem; }
-.variant-fontSize-normal { font-size: 1rem; }
-.variant-fontSize-large { font-size: 1.25rem; }
-.variant-fontSize-huge { font-size: 1.75rem; }
+.variant-fontSize-small { font-size: var(--theme-font-size-s, 0.875rem); }
+.variant-fontSize-normal { font-size: var(--theme-font-size-m, 1rem); }
+.variant-fontSize-large { font-size: var(--theme-font-size-l, 1.25rem); }
+.variant-fontSize-huge { font-size: var(--theme-font-size-xl, 1.75rem); }
 
 .hasDropCap:not(:focus)::first-letter {
   float: left;

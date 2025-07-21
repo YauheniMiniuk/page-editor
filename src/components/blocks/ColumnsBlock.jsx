@@ -6,35 +6,16 @@ import styles from './ColumnsBlock.module.css';
 
 // HOC и UI
 import { withBlock } from '../../hocs/withBlock';
-import { Columns2Icon, Columns3Icon, Columns4Icon, ColumnsIcon } from '../../utils/icons'; // иконки
+import { Columns2Icon, Columns3Icon, Columns4Icon, ColumnsIcon } from '../../utils/icons';
 import Tabs from '../../ui/Tabs';
 import Tab from '../../ui/Tab';
 import Select from '../../ui/Select';
 import PresetSelector from '../../ui/PresetSelector';
 import Checkbox from '../../ui/Checkbox';
 import CustomUnitInput from '../../ui/CustomUnitInput';
-import { defaultData as columnDefaultData } from './ColumnBlock'; // Импортируем данные из дочернего блока
+import { defaultData as columnDefaultData } from './ColumnBlock';
 import ColumnBlock from './ColumnBlock';
 import ToolbarButton from '../../ui/ToolbarButton';
-
-// --- Централизованная логика ---
-const handleColumnCountChange = (block, newCount) => {
-  const currentChildren = block.children || [];
-  const currentCount = currentChildren.length;
-  let newChildren = [...currentChildren];
-
-  if (newCount > currentCount) {
-    for (let i = 0; i < newCount - currentCount; i++) {
-      newChildren.push({ ...columnDefaultData(), id: nanoid() });
-    }
-  } else if (newCount < currentCount) {
-    newChildren = newChildren.slice(0, newCount);
-  }
-  return {
-    variants: { ...block.variants, columns: newCount },
-    children: newChildren,
-  };
-};
 
 // --- Компонент ---
 const ColumnsBlock = forwardRef(({ block, children, className, style, ...rest }, ref) => {
@@ -45,10 +26,10 @@ const ColumnsBlock = forwardRef(({ block, children, className, style, ...rest },
     styles.columnsWrapper,
     className,
     {
-      [styles[`variant-align-${variants.align}`]]: variants.align, // Для ширины
+      [styles[`variant-align-${variants.align}`]]: variants.align,
       [styles[`variant-direction-${variants.direction}`]]: variants.direction,
       [styles[`variant-justifyContent-${variants.justifyContent}`]]: variants.justifyContent,
-      [styles[`variant-alignItems-${variants.verticalAlign}`]]: variants.verticalAlign, // ИСПРАВЛЕНО
+      [styles[`variant-alignItems-${variants.verticalAlign}`]]: variants.verticalAlign,
       [styles['variant-stackOnMobile-true']]: variants.stackOnMobile,
     }
   );
@@ -100,7 +81,6 @@ ColumnsBlock.blockInfo = {
       onChange({ variants: { ...variants, [name]: value } });
     };
 
-    // 🔥 ИСПРАВЛЕННЫЙ ОБРАБОТЧИК ШАБЛОНОВ
     const handleTemplateChange = (template) => {
       const { widths, name } = template;
       const newColumnCount = widths.length;
@@ -127,7 +107,6 @@ ColumnsBlock.blockInfo = {
       });
     };
 
-    // 🔥 ИСПРАВЛЕННЫЙ ОБРАБОТЧИК КОЛИЧЕСТВА КОЛОНОК
     const handleColumnCountChange = (newCount) => {
       const currentChildren = block.children || [];
       const currentCount = currentChildren.length;

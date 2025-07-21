@@ -1,6 +1,8 @@
 import React from 'react';
 import styles from './Header.module.css';
-import { Eye, Code, PanelLeft, PanelRight, Settings, UploadCloud, Undo2, Redo2 } from 'lucide-react'; // Иконки для кнопок
+import { Eye, Code, PanelLeft, PanelRight, Settings, UploadCloud, Undo2, Redo2, Network, Image, Palette } from 'lucide-react'; // Иконки для кнопок
+import classNames from 'classnames';
+import { useBlockManager } from '../contexts/BlockManagementContext';
 
 const Header = ({
   isEditMode,
@@ -14,13 +16,10 @@ const Header = ({
   pageStatus,
   onPublish,
   isSaveDisabled,
-  onUndo,
-  onRedo,
-  canUndo,
-  canRedo
-}) => {
+}, ref) => {
+  const { actions } = useBlockManager();
   return (
-    <header className={styles.header}>
+    <header ref={ref} className={styles.header}>
       {/* ЛЕВАЯ СЕКЦИЯ: Заголовок и кнопки для левых панелей */}
       <div className={styles.leftSection}>
         <h1 className={styles.pageTitle}>{pageTitle}</h1>
@@ -35,11 +34,23 @@ const Header = ({
               <PanelLeft size={18} />
             </button>
             <button
-              className={`${styles.iconButton} ${activeLeftPanel === 'structure' ? styles.active : ''}`}
+              className={classNames(styles.iconButton, { [styles.active]: activeLeftPanel === 'structure' })}
               onClick={() => onToggleLeftPanel('structure')}
               title="Структура"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 6h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-3"></path><path d="M8 6H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"></path><path d="M12 4v16"></path></svg>
+              <Network size={18} />
+            </button>
+
+            <button
+              className={styles.iconButton}
+              onClick={() => actions.openMediaLibrary()}
+              title="Библиотека медиа"
+            >
+              <Image size={18} />
+            </button>
+
+            <button className={styles.iconButton} onClick={actions.openDesignModal} title="Дизайн-система">
+              <Palette size={18} />
             </button>
           </>
         )}
@@ -49,31 +60,27 @@ const Header = ({
       <div className={styles.centerSection}>
         {isEditMode && (
           <>
-            <button className={styles.iconButton} title="Отменить (Ctrl+Z)" onClick={onUndo} disabled={!canUndo}>
-              <Undo2 size={18} />
-            </button>
-            <button className={styles.iconButton} title="Повторить (Ctrl+Y)" onClick={onRedo} disabled={!canRedo}>
-              <Redo2 size={18} />
-            </button>
-            <div className={styles.separator} />
+            {/* Кнопки Undo/Redo */}
           </>
         )}
-        <button
-          className={`${styles.modeToggle} ${isEditMode ? styles.active : ''}`}
-          onClick={onToggleMode}
-          title="Перейти в режим редактирования"
-        >
-          <Code size={16} />
-          <span>Редактор</span>
-        </button>
-        <button
-          className={`${styles.modeToggle} ${!isEditMode ? styles.active : ''}`}
-          onClick={onToggleMode}
-          title="Перейти в режим просмотра"
-        >
-          <Eye size={16} />
-          <span>Просмотр</span>
-        </button>
+        <div className={styles.modeToggleGroup}> {/* <-- Новая обертка */}
+          <button
+            className={classNames(styles.modeToggle, { [styles.active]: isEditMode })}
+            onClick={isEditMode ? undefined : onToggleMode}
+            title="Режим редактирования"
+          >
+            <Code size={16} />
+            <span>Редактор</span>
+          </button>
+          <button
+            className={classNames(styles.modeToggle, { [styles.active]: !isEditMode })}
+            onClick={!isEditMode ? undefined : onToggleMode}
+            title="Режим просмотра"
+          >
+            <Eye size={16} />
+            <span>Просмотр</span>
+          </button>
+        </div>
       </div>
 
       {/* ПРАВАЯ СЕКЦИЯ: Обертка всегда на месте, контент условный */}

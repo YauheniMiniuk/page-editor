@@ -8,21 +8,33 @@ import ToolbarButton from '../../ui/ToolbarButton';
 import { CopyStylesIcon, DragHandleIcon, DuplicateIcon, PasteStylesIcon, SaveIcon } from '../../utils/icons';
 import ToolbarButtonGroup from '../../ui/ToolbarButtonGroup';
 import { DeleteIcon, TrashIcon } from 'lucide-react';
+import { useLayout } from '../../contexts/LayoutContext';
 
 const TOOLBAR_MARGIN = 8; // Отступ от блока в пикселях
 const portalRoot = document.getElementById('portal-root');
 
 const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, onSaveAsPattern, children }) => {
+  const { headerHeight } = useLayout();
   const toolbarRef = useRef(null);
-  const [style, setStyle] = useState({ opacity: 0 }); // Начинаем с невидимого состояния
+  const [style, setStyle] = useState({ opacity: 0 });
 
-  const { blocks, actions, copiedStyles } = useBlockManager();
+  const { blocks, actions, copiedStyles, activeMenu } = useBlockManager();
 
+  const dropdownId = `dropdown-${selectedBlock.id}`;
+  const isDropdownOpen = activeMenu?.id === dropdownId;
   const blockInfo = findBlockAndParent(blocks, selectedBlock.id);
   const parent = blockInfo?.parent;
   const siblings = parent ? parent.children : blocks;
   const isFirst = blockInfo?.index === 0;
   const isLast = blockInfo?.index === siblings.length - 1;
+
+  const handleDropdownToggle = () => {
+    if (isDropdownOpen) {
+      actions.closeMenu();
+    } else {
+      actions.openMenu(dropdownId);
+    }
+  };
 
   const menuItems = [
     {
@@ -72,13 +84,17 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, onSaveAsP
       const toolbarHeight = toolbarNode.offsetHeight;
       let topPosition;
 
-      // Твоя логика позиционирования остается без изменений
-      const isBlockScrolledPast = targetRect.top < TOOLBAR_MARGIN;
+      // Определяем верхнюю границу, ниже которой тулбар не может подняться
+      const topBoundary = headerHeight + TOOLBAR_MARGIN;
+
+      const isBlockScrolledPast = targetRect.top < topBoundary;
       if (isBlockScrolledPast) {
-        topPosition = TOOLBAR_MARGIN;
+        // Если блок "уехал" под шапку, приклеиваем тулбар к низу шапки
+        topPosition = topBoundary;
       } else {
+        // Иначе, стандартная логика
         const topPositionAbove = targetRect.top - toolbarHeight - TOOLBAR_MARGIN;
-        topPosition = (topPositionAbove > 0)
+        topPosition = (topPositionAbove > topBoundary)
           ? topPositionAbove
           : targetRect.bottom + TOOLBAR_MARGIN;
       }
@@ -111,7 +127,8 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, onSaveAsP
   }, [
     targetRef.current,    // <-- ГЛАВНЫЙ ФИКС: теперь эффект перезапустится, когда узел появится
     selectedBlock.id,     // Пересчитываем позицию при выборе нового блока
-    blocks
+    blocks,
+    headerHeight
   ]);
 
   const toolbarContent = (
@@ -119,10 +136,6 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, onSaveAsP
       ref={toolbarRef}
       className={styles.toolbar}
       style={style}
-      // onMouseDown={(e) => {
-      //   e.stopPropagation();
-      //   e.preventDefault();
-      // }}
       onClick={(e) => e.stopPropagation()}
     >
       {/* Ручка для перетаскивания. dnd-kit сам правильно обработает ее события. */}
@@ -153,7 +166,10 @@ const BlockToolbar = ({ selectedBlock, targetRef, dragHandleListeners, onSaveAsP
       <div className={styles.toolbarSeparator} />
 
       <ToolbarButtonGroup>
-        <DropdownMenu triggerContent="⋮" items={menuItems} />
+        <DropdownMenu
+          items={menuItems}
+          isOpen={isDropdownOpen}
+          onToggle={handleDropdownToggle} />
       </ToolbarButtonGroup>
     </div>
   );

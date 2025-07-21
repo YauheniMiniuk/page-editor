@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import classNames from 'classnames';
 import { motion } from 'framer-motion'; // <-- Импортируем motion
@@ -6,13 +6,16 @@ import BlockToolbar from '../components/common/BlockToolbar';
 import { getVariantClasses } from '../utils/styleUtils';
 import styles from './withBlock.module.css';
 import { useBlockManager } from '../contexts/BlockManagementContext';
+import ContextMenu from '../ui/ContextMenu';
+import { CopyStylesIcon, DuplicateIcon, PasteStylesIcon } from '../utils/icons';
+import { SaveIcon, TrashIcon } from 'lucide-react';
 
 export const withBlock = (BlockComponent) => {
     const MotionBlockComponent = motion(BlockComponent);
     const WrappedComponent = React.forwardRef((props, ref) => {
         // --- Получаем всё из одного места ---
         const { block, mode, blockNodesRef, layoutDirection, onSaveAsPattern } = props;
-        const { actions, isInlineEditing, activeId, selectedBlockId } = useBlockManager();
+        const { actions, isInlineEditing, activeId, selectedBlockId, copiedStyles } = useBlockManager();
 
         // --- Вычисляем состояния прямо здесь ---
         const isSelected = selectedBlockId === block.id;
@@ -72,6 +75,13 @@ export const withBlock = (BlockComponent) => {
             selection.addRange(range);
         }, []);
 
+        const handleContextMenu = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // ID теперь включает префикс, чтобы мы знали, что это именно контекстное меню
+            actions.openMenu(`context-${block.id}`, { x: e.clientX, y: e.clientY });
+        };
+
         const finalClassName = classNames(
             getVariantClasses(block.variants, blockStyles),
             {
@@ -118,6 +128,8 @@ export const withBlock = (BlockComponent) => {
                     onClick={mode === 'edit' ? handleBlockClick : undefined}
                     onPaste={handlePaste}
                     data-block-id={block.id}
+
+                    onContextMenu={isEditMode ? handleContextMenu : undefined}
                 />
             </>
         );

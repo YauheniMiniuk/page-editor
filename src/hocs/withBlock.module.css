@@ -13,106 +13,70 @@
 
 /* --- Стили для Дроп-Зон --- */
 
-/* Базовый стиль для всех дроп-зон */
 .dropZone {
   position: absolute;
-  background: rgba(0, 124, 186, 0.5);
-  border-radius: 2px;
-  z-index: 10;
-  /* Изначально они полностью прозрачны и не кликабельны */
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out;
+  z-index: 5;
+  background-color: transparent; /* Изначально прозрачные */
+  transition: all 0.15s ease-in-out;
+  pointer-events: none; /* dnd-kit все равно их поймает */
 }
 
-.dropZone.visible {
-  opacity: 1;
-  pointer-events: auto; /* Делаем их "улавливаемыми" для dnd-kit */
+.selected .dropZone {
+  pointer-events: auto; /* Показываем дроп-зоны только у выделенного блока */
 }
 
-/* Состояние, когда над дроп-зоной находится перетаскиваемый элемент */
 .dropZone.isOver {
-  background: #007cba; /* Делаем ярче */
-  /* Можно добавить и другие эффекты, например, увеличить высоту/ширину */
+  background-color: #3b82f6; /* Просто красим в синий при наведении */
 }
 
-.dropZoneOver::after {
-  content: '';
-  position: absolute;
-  background-color: #3b82f6;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.9);
-  border-radius: 2px;
-}
-.dropZoneOver::after,
-.dropZoneOver::after {
-  height: 4px;
-  left: 0;
-  width: 100%;
-  top: 13px;
-  /* Центрируем линию ( (30px - 4px) / 2 ) */
-}
-
-/* Состояние, когда над дроп-зоной находится перетаскиваемый элемент */
-.isOver {
-    opacity: 1;
-    background: #007cba;
-    /* Делаем ярче */
-}
-
-/* Позиционирование вертикальных дроп-зон */
+/* Вертикальные (сверху/снизу) */
 .dropZoneTop,
 .dropZoneBottom {
-    left: 0;
-    right: 0;
-    height: 4px;
+  left: 20px; /* Отступы по бокам, чтобы линия не была на всю ширину */
+  right: 20px;
+  height: 20px; /* Область захвата */
 }
+.dropZoneTop { top: -10px; }
+.dropZoneBottom { bottom: -10px; }
 
-.dropZoneTop {
-    top: -4px;
+/* При наведении просто показываем синюю линию */
+.selected .dropZoneTop,
+.selected .dropZoneBottom {
+  background-color: rgba(59, 130, 246, 0.5);
+  height: 4px;
 }
-
-.dropZoneBottom {
-    bottom: -4px;
-}
+.dropZoneTop { top: -2px; }
+.dropZoneBottom { bottom: -2px; }
 
 .dropZoneTop.isOver,
 .dropZoneBottom.isOver {
-    height: 8px;
+  height: 6px; /* Линия становится толще */
 }
+.dropZoneTop.isOver { top: -3px; }
+.dropZoneBottom.isOver { bottom: -3px; }
 
-.dropZoneTop.isOver {
-    top: -6px;
-}
 
-.dropZoneBottom.isOver {
-    bottom: -6px;
-}
-
-/* Позиционирование горизонтальных дроп-зон */
+/* Горизонтальные (слева/справа) - по аналогии */
 .dropZoneLeft,
 .dropZoneRight {
-    top: 0;
-    bottom: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 20px;
+}
+.dropZoneLeft { left: -10px; }
+.dropZoneRight { right: -10px; }
+
+.selected .dropZoneLeft,
+.selected .dropZoneRight {
+    background-color: rgba(59, 130, 246, 0.5);
     width: 4px;
 }
-
-.dropZoneLeft {
-    left: -4px;
-}
-
-.dropZoneRight {
-    right: -4px;
-}
+.dropZoneLeft { left: -2px; }
+.dropZoneRight { right: -2px; }
 
 .dropZoneLeft.isOver,
 .dropZoneRight.isOver {
-    width: 8px;
+    width: 6px;
 }
-
-.dropZoneLeft.isOver {
-    left: -6px;
-}
-
-.dropZoneRight.isOver {
-    right: -6px;
-}
+.dropZoneLeft.isOver { left: -3px; }
+.dropZoneRight.isOver { right: -3px; }

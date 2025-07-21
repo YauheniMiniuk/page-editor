@@ -1,10 +1,8 @@
 .heading {
     font-weight: 700;
     line-height: 1.2;
-    color: #111827;
+    color: var(--theme-color-heading, #111827);
     position: relative;
-
-    /* Чтобы блок был кликабельным даже без текста */
     min-height: 1.2em;
     min-width: 2ch;
     display: inline-block;
@@ -31,12 +29,12 @@
 }
 
 /* --- Размеры заголовков --- */
-.h1 { font-size: 2.25rem; } /* 36px */
-.h2 { font-size: 1.875rem; } /* 30px */
-.h3 { font-size: 1.5rem; }   /* 24px */
-.h4 { font-size: 1.25rem; }  /* 20px */
-.h5 { font-size: 1.125rem; } /* 18px */
-.h6 { font-size: 1rem; }     /* 16px */
+.h1 { font-size: var(--theme-font-size-h1, 2.25rem); }
+.h2 { font-size: var(--theme-font-size-h2, 1.875rem); }
+.h3 { font-size: var(--theme-font-size-h3, 1.5rem); }
+.h4 { font-size: var(--theme-font-size-h4, 1.25rem); }
+.h5 { font-size: var(--theme-font-size-h5, 1.125rem); }
+.h6 { font-size: var(--theme-font-size-h6, 1rem); }
 
 /* --- Варианты выравнивания --- */
 .variant-textAlign-left { text-align: left; }

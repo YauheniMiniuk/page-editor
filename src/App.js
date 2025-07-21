@@ -5,6 +5,8 @@ import { EDITOR_MODS } from './utils/constants';
 import { BrowserRouter, Routes, Route } from 'react-router';
 import PagesDashboard from './components/PagesDashboard';
 import { BlockManagementProvider } from './contexts/BlockManagementContext';
+import { LayoutProvider } from './contexts/LayoutContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 export default function App() {
   const [mode, setMode] = useState(EDITOR_MODS.VIEW)
@@ -15,22 +17,26 @@ export default function App() {
   return (
     <>
       <BlockManagementProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path='/' element={
-              <PagesDashboard />
-            }
-            />
-            <Route
-              path='/editor/:slug'
-              element={<DndCanvasBuilder initialMode="edit" />}
-            />
-            <Route
-              path='/page/:slug'
-              element={<DndCanvasBuilder initialMode="view" />}
-            />
-          </Routes>
-        </BrowserRouter>
+        <LayoutProvider>
+          <ThemeProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path='/' element={
+                  <PagesDashboard />
+                }
+                />
+                <Route
+                  path='/editor/:slug'
+                  element={<DndCanvasBuilder initialMode="edit" />}
+                />
+                <Route
+                  path='/page/:slug'
+                  element={<DndCanvasBuilder initialMode="view" />}
+                />
+              </Routes>
+            </BrowserRouter>
+          </ThemeProvider>
+        </LayoutProvider>
       </BlockManagementProvider>
     </>
   );

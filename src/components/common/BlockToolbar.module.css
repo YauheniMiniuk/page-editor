@@ -75,7 +75,7 @@
 /* Разделитель стал тоньше и аккуратнее */
 .toolbarSeparator {
   width: 1px;
-  height: 18px; /* Чуть меньше высоты кнопок */
+  height: 18px;
   background-color: var(--separator-color);
   margin: 0 4px;
 }

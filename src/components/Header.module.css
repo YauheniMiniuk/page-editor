@@ -38,6 +38,14 @@
   border-radius: 8px;
 }
 
+.modeToggleGroup {
+  display: flex;
+  align-items: center;
+  background-color: #f3f4f6;
+  padding: 4px;
+  border-radius: 8px;
+}
+
 .modeToggle {
   display: flex;
   align-items: center;

@@ -29,15 +29,17 @@ const useBlockManagement = (initialBlocks = []) => {
   const [patterns, setPatterns] = useState([]);
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [activeId, setActiveId] = useState(null);
-  const [activeDragItem, setActiveDragItem] = useState(null);
-  const [overDropZone, setOverDropZone] = useState(null);
   const [focusRequest, setFocusRequest] = useState(null);
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const [copiedStyles, setCopiedStyles] = useState(null);
+  const [activeMenu, setActiveMenu] = useState(null);
+  const [mediaLibraryState, setMediaLibraryState] = useState({ isOpen: false, onSelect: null });
+  const [isDesignModalOpen, setIsDesignModalOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   const addPattern = useCallback((newPattern) => {
     setPatterns(prev => [...prev, newPattern]);
-  }, []); // setPatterns стабильна, зависимость не нужна
+  }, []);
 
   const removePattern = useCallback((patternId) => {
     setPatterns(prev => prev.filter(p => p.id !== patternId));
@@ -45,7 +47,10 @@ const useBlockManagement = (initialBlocks = []) => {
 
   const actions = useMemo(() => ({
     // Функции, которые только обновляют состояние, не завися от него
-    update: (id, props) => setBlocks(prev => updateBlockRecursive(prev, id, props)),
+    update: (id, props, options = {}) => {
+      // Прокидываем опции в setState
+      setBlocks(prev => updateBlockRecursive(prev, id, props), { debounce: options.debounce ? 500 : 0 });
+    },
     add: (targetId, block, pos) => setBlocks(prev => insertBlockRecursive(prev, targetId, block, pos)),
     swap: (id, dir) => {
       setBlocks(prev => swapBlocksRecursive(prev, id, dir));
@@ -63,7 +68,6 @@ const useBlockManagement = (initialBlocks = []) => {
     replaceBlock: (blockId, newBlockObject) => {
       setBlocks(prev => prev.map(b => (b.id === blockId ? newBlockObject : b)));
     },
-
     duplicate: (id) => {
       setBlocks(prevBlocks => {
         const blockInfo = findBlockAndParent(prevBlocks, id);
@@ -77,7 +81,6 @@ const useBlockManagement = (initialBlocks = []) => {
         return insertBlockRecursive(prevBlocks, id, newBlock, 'bottom');
       });
     },
-
     copyStyles: (id) => {
       const blockInfo = findBlockAndParent(blocks, id);
       if (blockInfo?.block) {
@@ -90,14 +93,11 @@ const useBlockManagement = (initialBlocks = []) => {
         // Сюда можно добавить уведомление для пользователя, например, "Стили скопированы!"
       }
     },
-
     pasteStyles: (id) => {
       if (!copiedStyles) return; // Ничего не делаем, если буфер пуст
       // updateBlockRecursive уже умеет глубоко сливать объекты, что идеально нам подходит
       actions.update(id, copiedStyles);
     },
-
-    // Функции, которые зависят от текущего состояния (blocks, selectedBlockId)
     delete: (id) => {
       // Зависит от selectedBlockId
       if (selectedBlockId === id) setSelectedBlockId(null);
@@ -108,12 +108,15 @@ const useBlockManagement = (initialBlocks = []) => {
       const info = findBlockAndParent(blocks, childId);
       if (info?.parent) setSelectedBlockId(info.parent.id);
     },
-    selectSibling: (siblingId, direction = 'next') => {
-      // Зависит от blocks
-      const info = findBlockAndParent(blocks, siblingId);
+    selectSibling: (blockId, direction = 'next') => {
+      const info = findBlockAndParent(blocks, blockId);
       if (!info) return;
+
+      // Определяем, где искать соседей: в корне или в родительском блоке
       const siblings = info.parent ? info.parent.children : blocks;
-      const newIndex = direction === 'next' ? info.index + 1 : info.index - 1;
+      const newIndex = direction === 'up' ? info.index - 1 : info.index + 1;
+
+      // Если новый индекс в пределах массива, выбираем соседа
       if (newIndex >= 0 && newIndex < siblings.length) {
         setSelectedBlockId(siblings[newIndex].id);
       }
@@ -135,21 +138,48 @@ const useBlockManagement = (initialBlocks = []) => {
     undo,
     redo,
     resetHistory,
-    // Прямая передача сеттеров
     setBlocks,
     select: setSelectedBlockId,
     setActiveId,
     setInlineEditing: setIsInlineEditing,
-
-    // Простые функции без зависимостей
     clearFocusRequest: () => setFocusRequest(null),
-    setOverDropZone,
-
     setPatterns,
     addPattern,
     removePattern,
+    openMenu: (menuId, data = {}) => {
+      // menuId - уникальный ID меню (например, 'context-menu-xyz')
+      // data - любые доп. данные (например, координаты {x, y})
+      setActiveMenu({ id: menuId, data });
+    },
+    closeMenu: () => {
+      setActiveMenu(null);
+    },
+    openMediaLibrary: (onSelectCallback) => {
+      // Сохраняем колбэк, который будет вызван при выборе файла
+      setMediaLibraryState({ isOpen: true, onSelect: onSelectCallback });
+    },
+    closeMediaLibrary: () => {
+      setMediaLibraryState({ isOpen: false, onSelect: null });
+    },
+    addNotification: (message, type = 'success', duration = 3000) => {
+      const id = Date.now();
+      setNotifications(prev => [...prev, { id, message, type }]);
 
-  }), [selectedBlockId, setBlocks, undo, redo, copiedStyles]);
+      // Убираем уведомление по таймеру, только если duration не null
+      if (duration) {
+        setTimeout(() => {
+          setNotifications(prev => prev.filter(n => n.id !== id));
+        }, duration);
+      }
+      return id; // Возвращаем ID, чтобы можно было удалить вручную
+    },
+    removeNotification: (id) => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    },
+    openDesignModal: () => setIsDesignModalOpen(true),
+    closeDesignModal: () => setIsDesignModalOpen(false),
+
+  }), [selectedBlockId, setBlocks, undo, redo, copiedStyles, blocks]);
 
   return {
     blocks,
@@ -162,6 +192,10 @@ const useBlockManagement = (initialBlocks = []) => {
     actions,
     canUndo,
     canRedo,
+    activeMenu,
+    mediaLibraryState,
+    notifications,
+    isDesignModalOpen,
   };
 };
 

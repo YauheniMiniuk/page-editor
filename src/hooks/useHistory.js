@@ -1,24 +1,31 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 
 export const useHistory = (initialState) => {
   const [history, setHistory] = useState([initialState]);
   const [index, setIndex] = useState(0);
+  const debounceTimer = useRef(null);
 
   const present = useMemo(() => history[index], [history, index]);
 
-  const setState = useCallback((action) => {
-    const newState = typeof action === 'function' ? action(present) : action;
-    
-    // Если новое состояние идентично текущему, ничего не делаем
-    if (JSON.stringify(newState) === JSON.stringify(present)) {
-      return;
-    }
+  const setState = useCallback((action, options = {}) => {
+    clearTimeout(debounceTimer.current);
 
-    // Если мы сделали undo, а потом новое действие, "будущее" нужно отрезать
-    const newHistory = history.slice(0, index + 1);
-    
-    setHistory([...newHistory, newState]);
-    setIndex(newHistory.length);
+    const applyState = () => {
+      const newState = typeof action === 'function' ? action(present) : action;
+      if (JSON.stringify(newState) === JSON.stringify(present)) return;
+
+      const newHistory = history.slice(0, index + 1);
+      setHistory([...newHistory, newState]);
+      setIndex(newHistory.length);
+    };
+
+    if (options.debounce) {
+      // Если нужна задержка, устанавливаем таймер
+      debounceTimer.current = setTimeout(applyState, options.debounce);
+    } else {
+      // Иначе применяем сразу
+      applyState();
+    }
   }, [present, index, history]);
 
   const undo = useCallback(() => {
@@ -47,5 +54,6 @@ export const useHistory = (initialState) => {
     resetHistory: reset,
     canUndo: index > 0,
     canRedo: index < history.length - 1,
+    setState,
   };
 };

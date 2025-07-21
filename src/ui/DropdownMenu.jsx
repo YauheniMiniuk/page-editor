@@ -3,19 +3,11 @@ import { createPortal } from 'react-dom';
 import classNames from 'classnames';
 import styles from './DropdownMenu.module.css';
 
-const DropdownMenu = ({ items, triggerContent = '⋮', onOpenChange }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    // Начинаем с невидимого состояния, чтобы избежать "прыжка"
+const DropdownMenu = ({ items, triggerContent = '⋮', isOpen, onToggle }) => {
     const [menuStyle, setMenuStyle] = useState({ opacity: 0 });
     const buttonRef = useRef(null);
     const menuRef = useRef(null);
 
-    const toggleMenu = () => {
-        setIsOpen(prev => !prev);
-        onOpenChange?.(!isOpen);
-    };
-
-    // 🔥 ИСПОЛЬЗУЕМ useLayoutEffect ДЛЯ ПРЕДОТВРАЩЕНИЯ МЕРЦАНИЯ
     useLayoutEffect(() => {
         if (isOpen && buttonRef.current && menuRef.current) {
             const buttonRect = buttonRef.current.getBoundingClientRect();
@@ -49,27 +41,26 @@ const DropdownMenu = ({ items, triggerContent = '⋮', onOpenChange }) => {
                 !buttonRef.current?.contains(e.target) &&
                 !menuRef.current?.contains(e.target)
             ) {
-                setIsOpen(false);
-                onOpenChange?.(false);
+                onToggle();
             }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isOpen, onOpenChange]);
+    }, [isOpen, onToggle]);
 
     return (
         <>
             <button
                 className={styles.dropdownButton}
                 title="Дополнительные опции"
-                onClick={toggleMenu}
+                onClick={onToggle} // <-- Просто вызываем onToggle
                 ref={buttonRef}
             >
                 {triggerContent}
             </button>
 
-            {createPortal(
+            {isOpen && createPortal(
                 <div
                     className={styles.menu}
                     style={menuStyle}
@@ -92,8 +83,7 @@ const DropdownMenu = ({ items, triggerContent = '⋮', onOpenChange }) => {
                                 disabled={item.disabled}
                                 onClick={() => {
                                     item.onClick?.();
-                                    setIsOpen(false);
-                                    onOpenChange?.(false);
+                                    onToggle();
                                 }}
                             >
                                 {item.icon && <span className={styles.icon}>{item.icon}</span>}

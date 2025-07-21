@@ -1,0 +1,148 @@
+.gridContainer {
+    display: flex;
+    gap: 24px;
+    height: 100%; /* Контейнер занимает всю высоту родителя */
+    overflow: hidden; /* Предотвращаем скролл самого контейнера */
+}
+
+/* --- Сетка с файлами --- */
+.grid {
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+    align-content: flex-start;
+    
+    /* 🔥 ВОТ КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Скролл теперь здесь */
+    overflow-y: auto;
+    padding-right: 12px; /* Место для скроллбара, чтобы не налезал на контент */
+}
+
+.gridItem {
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #e5e7eb;
+    aspect-ratio: 1 / 1;
+    transition: border-color 0.2s;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.gridItem.selected {
+    border-color: #4f46e5;
+}
+
+.thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.fileName {
+    font-size: 12px;
+    padding: 8px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background-color: rgba(249, 250, 251, 0.9);
+    width: 100%;
+    flex-shrink: 0;
+}
+
+/* --- Сайдбар --- */
+.sidebar {
+    flex-shrink: 0;
+    width: 320px;
+    background-color: #ffffff;
+    border-left: 1px solid #e5e7eb;
+    
+    /* 🔥 ВОТ КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Превращаем сайдбар во flex-колонку */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Новая обертка для контента сайдбара */
+.sidebarContent {
+    flex-grow: 1; /* Занимает все доступное место по высоте */
+    overflow-y: auto; /* И ТОЛЬКО ЭТА ЧАСТЬ будет скроллиться, если не влезет */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sidebar h4 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.sidebarPreview {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+    background-color: #f3f4f6;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    flex-shrink: 0; /* Превью не будет сжиматься */
+}
+
+.sidebarFilename {
+    font-size: 14px;
+    font-family: monospace;
+    color: #6b7280;
+    background-color: #f3f4f6;
+    padding: 8px;
+    border-radius: 4px;
+    word-break: break-all;
+    margin: 0;
+}
+
+.input, .textarea {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* Новая обертка для кнопок внизу */
+.sidebarActions {
+    flex-shrink: 0; /* Не сжимается */
+    padding: 16px 20px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.saveButton, .deleteButton {
+    /* Общие стили для кнопок */
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.saveButton {
+    background-color: #10b981;
+    color: white;
+}
+
+.deleteButton {
+    background-color: transparent;
+    color: #ef4444;
+}
+
+.deleteButton:hover {
+    background-color: #fee2e2;
+}
