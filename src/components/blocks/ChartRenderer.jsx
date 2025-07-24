@@ -1,4 +1,3 @@
-// src/components/blocks/ChartRenderer.js
 import React, { useEffect, useState } from 'react';
 import { fetchChart, fetchChartData } from '../../api/chartApi';
 
@@ -29,7 +28,24 @@ const ChartRenderer = ({ chartProps }) => {
             setError(null);
             try {
                 const config = await fetchChart(chartProps.chartID);
-                const settings = { ...JSON.parse(config.settings) };
+
+                let settings = config.settings;
+                if (typeof settings === 'string') {
+                    try {
+                        settings = JSON.parse(settings);
+                    } catch (e) {
+                        console.error("Не удалось распарсить настройки графика:", e);
+                        settings = {}; // В случае ошибки используем пустые настройки
+                    }
+                }
+                // Убедимся, что settings - это объект, а не null/undefined
+                settings = settings || {};
+
+                // Проверяем, есть ли вообще данные для запроса
+                if (!settings.data || settings.data.length === 0) {
+                    setChartConfig(settings);
+                    return; // Выходим, если нечего запрашивать
+                }
 
                 const params = new URLSearchParams();
                 settings.data.forEach((data, index) => {
@@ -67,11 +83,15 @@ const ChartRenderer = ({ chartProps }) => {
         return <div style={{ height: chartProps.height || 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Нет данных для графика.</div>;
     }
 
+    // Если chartID не указан, ничего не рендерим
+    if (!chartProps.chartID) {
+        return null;
+    }
+
     return (
         <div style={{ position: 'relative', width: '100%', height: chartProps.height || 400 }}>
-            {/* Показываем кнопку детализации только для обычного графика */}
-            {chartProps.chartType === 'common' && (
-                 <IconButton
+            {chartProps.chartType === 'common' && chartConfig && (
+                <IconButton
                     tooltip="Детализация"
                     onClick={() => setIsModalOpen(true)}
                     style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10 }}
@@ -80,20 +100,17 @@ const ChartRenderer = ({ chartProps }) => {
                 </IconButton>
             )}
 
-            {/* В зависимости от типа рендерим либо Simple, либо Common график */}
-            {chartProps.chartType === 'simple' ?
+            {chartConfig && (chartProps.chartType === 'simple' ?
                 <SimpleChart chartConfig={chartConfig} chartProps={chartProps} /> :
                 <CommonChart chartConfig={chartConfig} chartProps={chartProps} />
-            }
+            )}
 
-            {/* В модальном окне всегда показываем Detailed график */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 title={chartConfig?.title || "Детализация графика"}
                 style={{ width: '80vw', height: '80vh', maxWidth: '1280px' }}
             >
-                {/* Добавляем проверку, чтобы не рендерить DetailedChart без данных */}
                 {chartConfig && <DetailedChart chartConfig={chartConfig} chartProps={chartProps} />}
             </Modal>
         </div>
