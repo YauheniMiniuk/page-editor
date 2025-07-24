@@ -1,0 +1,113 @@
+.wrapper {
+    /* CSS переменные для легкой смены тем и адаптивности */
+    --chart-bg: #fff;
+    --label-color: #374151;
+    --block-outline-color: #e5e7eb;
+    --block-text-color: #9ca3af;
+    
+    padding: 20px 0;
+}
+
+.darkTheme {
+    --chart-bg: #1f2937;
+    --label-color: #d1d5db;
+    --block-outline-color: #4b5563;
+    --block-text-color: #6b7280;
+}
+
+.chart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 600px;
+    padding: 10px;
+    margin: 0 auto;
+    
+    /* Начальные значения, если контейнер больше 768px */
+    --block-size: 60px;
+    --selected-block-size: 90px;
+    --font-size: 1.15rem;
+    --block-outline-width: 2px;
+}
+
+/* Адаптивность через медиа-запросы */
+@media (max-width: 768px) {
+    .chart {
+        --block-size: 40px;
+        --selected-block-size: 60px;
+    }
+}
+@media (max-width: 540px) {
+    .chart {
+        --block-size: 36px;
+        --selected-block-size: 54px;
+        --font-size: 1rem;
+    }
+}
+@media (max-width: 480px) {
+    .chart {
+        --block-size: 30px;
+        --selected-block-size: 45px;
+    }
+}
+@media (max-width: 360px) {
+    .chart {
+        --block-size: 26px;
+        --selected-block-size: 39px;
+    }
+}
+
+.chartContainer {
+    display: flex;
+    gap: 2px;
+    width: 100%;
+    justify-content: center;
+}
+
+.group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.groupBlocks {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    height: var(--selected-block-size);
+}
+
+.groupLabel {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.block {
+    width: var(--block-size);
+    height: var(--block-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: var(--font-size);
+    outline: var(--block-outline-width) solid;
+    transition: all 0.3s ease;
+    color: var(--block-text-color);
+    outline-color: var(--block-outline-color);
+}
+
+.selected {
+    width: var(--selected-block-size);
+    height: var(--selected-block-size);
+}
+
+/* Цветовые варианты */
+.green { outline-color: #7bc06d; color: #7bc06d; }
+.yellow { outline-color: #eecd20; color: #eecd20; }
+.red { outline-color: #e94558; color: #e94558; }
+
+.green.selected { background-color: rgba(123, 192, 109, 0.1); }
+.yellow.selected { background-color: rgba(238, 205, 32, 0.1); }
+.red.selected { background-color: rgba(233, 69, 88, 0.1); }

@@ -23,18 +23,21 @@ import DropIndicator from './common/DropIndicator';
 import styles from './DndCanvasBuilder.module.css';
 import { useLayout } from '../contexts/LayoutContext';
 import { CopyStylesIcon, DuplicateIcon, PasteStylesIcon } from '../utils/icons';
-import { SaveIcon, TrashIcon } from 'lucide-react';
+import { SaveIcon, Sparkles, TrashIcon } from 'lucide-react';
 import ContextMenu from '../ui/ContextMenu';
 import MediaLibrary from './media/MediaLibrary';
 import Notifications from './common/Notification';
 import DesignModal from './design/DesignModal';
+import AiPromptModal from './common/AIPromptModal';
+import GlobalStylesModal from './modals/GlobalStylesModal';
+import DynamicStylesRenderer from './common/DynamicStylesRenderer';
 
 const portalRoot = document.getElementById('portal-root');
 
 export default function DndCanvasBuilder({ initialMode = 'edit' }) {
   const { headerRef } = useLayout();
   const location = useLocation();
-  const { actions, canUndo, canRedo, selectedBlockId, blocks, activeMenu, copiedStyles, mediaLibraryState, isDesignModalOpen, notifications } = useBlockManager();
+  const { actions, canUndo, canRedo, selectedBlockId, blocks, activeMenu, copiedStyles, mediaLibraryState, isDesignModalOpen, notifications, isGenerating, aiModalState, isGlobalStylesModalOpen } = useBlockManager();
 
   const { isLoading, pageTitle, mode, setMode, pageStatus, handleSave, handlePublish, isDirty } = usePageData(initialMode);
   const { activeLeftPanel, panelContent, isPropertiesPanelVisible, handleToggleLeftPanel, handleTogglePropertiesPanel } = usePanelManager();
@@ -74,10 +77,34 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
       { isSeparator: true },
       { label: 'Сохранить как паттерн', icon: <SaveIcon />, onClick: onSavePatternClick },
       { isSeparator: true },
+      {
+        label: 'Сгенерировать с ИИ',
+        icon: <Sparkles size={16} />,
+        onClick: () => actions.openAiModal(contextBlockId)
+      },
+      { isSeparator: true },
       { label: 'Удалить', icon: <TrashIcon />, onClick: () => actions.delete(contextBlockId), isDestructive: true },
     ];
     // Обновляем зависимости useMemo
   }, [contextBlockId, actions, copiedStyles, blocks, handleSaveAsPattern]);
+
+  // 1. Находим полный объект блока для передачи в модалку в качестве контекста
+  const blockForAiModal = useMemo(() => {
+    if (!aiModalState.isOpen || !aiModalState.blockId) return null;
+    const { findBlockAndParent } = require('../utils/blockUtils');
+    // findBlockAndParent вернет объект `{ block, parent, index }`
+    // Нам нужен сам блок, который уже содержит всех своих детей
+    return findBlockAndParent(blocks, aiModalState.blockId)?.block;
+  }, [aiModalState, blocks]);
+
+  // 2. Функция, которая будет вызвана при сабмите формы в модалке
+  const handleAiSubmit = (prompt) => {
+    if (!aiModalState.blockId) return;
+    // Вызываем уже существующий action для генерации
+    actions.restructureBlockWithAI(aiModalState.blockId, prompt);
+    // Сразу закрываем модалку
+    actions.closeAiModal();
+  };
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 10 } }));
   const selectedBlock = useMemo(() => {
@@ -214,6 +241,8 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
             </motion.aside>
           )}
         </AnimatePresence>
+
+        <DynamicStylesRenderer />
       </main>
     </div>
   );
@@ -238,6 +267,17 @@ export default function DndCanvasBuilder({ initialMode = 'edit' }) {
         <DesignModal
           isOpen={isDesignModalOpen}
           onClose={actions.closeDesignModal}
+        />
+        <GlobalStylesModal
+          isOpen={isGlobalStylesModalOpen}
+          onClose={actions.closeGlobalStylesModal}
+        />
+        <AiPromptModal
+          isOpen={aiModalState.isOpen}
+          onClose={actions.closeAiModal}
+          onSubmit={handleAiSubmit}
+          blockContext={blockForAiModal}
+          isGenerating={isGenerating}
         />
 
         <Notifications notifications={notifications} />

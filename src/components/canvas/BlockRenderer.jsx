@@ -1,6 +1,5 @@
 import React, { memo } from 'react';
 import { BLOCK_COMPONENTS } from '../../utils/constants';
-import { useBlockManager } from '../../contexts/BlockManagementContext';
 
 const BlockRenderer = ({ block, mode, blockNodesRef, layoutDirection = 'column', onSaveAsPattern, ...rest }) => {
     const ComponentToRender = BLOCK_COMPONENTS[block.type];
@@ -10,7 +9,7 @@ const BlockRenderer = ({ block, mode, blockNodesRef, layoutDirection = 'column',
         return <div>Неизвестный тип блока: {block.type}</div>;
     }
 
-    let currentLayoutDirection = 'row'; // Значение по умолчанию
+    let currentLayoutDirection = 'column'; // Значение по умолчанию
 
     if (blockInfo?.layoutDirection) {
         // Если layoutDirection - это функция (как у ContainerBlock), вызываем её

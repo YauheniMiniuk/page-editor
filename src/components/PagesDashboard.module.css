@@ -4,69 +4,97 @@
   margin: 2rem auto;
   padding: 1rem;
 }
+
 .createPage {
   margin-bottom: 1.5rem;
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   cursor: pointer;
 }
+
+.pagesListContainer {
+  max-height: 70vh;
+  overflow-y: auto;
+  border: 1px black solid;
+}
+
 .pagesList {
+  flex: 1;
   margin-top: 1.5rem;
 }
+
 .pageItem {
   border: 1px solid #ccc;
   border-radius: 8px;
   margin-bottom: 1rem;
   padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
-.pageHeader, .versionItem {
+
+.pageHeader,
+.versionItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem; /* Используем gap для отступов */
+  gap: 1rem;
+  /* Используем gap для отступов */
 }
+
 .pageHeader h2 {
   margin: 0;
   font-size: 1.5rem;
 }
+
 .pageHeader h2 small {
   font-size: 1rem;
   color: #555;
   font-weight: normal;
 }
-.pageActions, .versionActions {
+
+.pageActions,
+.versionActions {
   display: flex;
-  gap: 0.5rem; /* Используем gap */
+  gap: 0.5rem;
+  /* Используем gap */
 }
-.pageActions button, .versionActions button {
+
+.pageActions button,
+.versionActions button {
   padding: 0.5rem 1rem;
   border: 1px solid #ddd;
   background: #f7f7f7;
   cursor: pointer;
   border-radius: 4px;
 }
+
 .delete {
   background-color: #fdd;
   border-color: #fbb;
 }
+
 .versionsList {
   margin-top: 1rem;
   border-top: 1px dashed #ccc;
   padding-top: 1rem;
 }
+
 .versionsLoading {
   color: #777;
 }
+
 .versionItem {
   padding: 0.75rem;
   border-radius: 6px;
   margin-top: 0.5rem;
 }
+
 .published {
-  background-color: #e8f5e9; /* Светло-зеленый для опубликованных */
+  background-color: #e8f5e9;
+  /* Светло-зеленый для опубликованных */
 }
+
 .draft {
-  background-color: #fff9c4; /* Светло-желтый для черновиков */
+  background-color: #fff9c4;
+  /* Светло-желтый для черновиков */
 }

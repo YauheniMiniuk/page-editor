@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './Header.module.css';
-import { Eye, Code, PanelLeft, PanelRight, Settings, UploadCloud, Undo2, Redo2, Network, Image, Palette } from 'lucide-react'; // Иконки для кнопок
+import { Eye, Code, PanelLeft, PanelRight, Settings, UploadCloud, Undo2, Redo2, Network, Image, Palette, Sparkles, Wand2 } from 'lucide-react'; // Иконки для кнопок
 import classNames from 'classnames';
 import { useBlockManager } from '../contexts/BlockManagementContext';
 
@@ -16,6 +16,10 @@ const Header = ({
   pageStatus,
   onPublish,
   isSaveDisabled,
+  onUndo,
+  canUndo,
+  onRedo,
+  canRedo
 }, ref) => {
   const { actions } = useBlockManager();
   return (
@@ -52,6 +56,10 @@ const Header = ({
             <button className={styles.iconButton} onClick={actions.openDesignModal} title="Дизайн-система">
               <Palette size={18} />
             </button>
+
+            <button className={styles.iconButton} onClick={actions.openGlobalStylesModal} title="Глобальные стили">
+              <Wand2 size={18} /> {/* или Wand2 */}
+            </button>
           </>
         )}
       </div>
@@ -60,7 +68,13 @@ const Header = ({
       <div className={styles.centerSection}>
         {isEditMode && (
           <>
-            {/* Кнопки Undo/Redo */}
+            <button className={styles.iconButton} title="Отменить (Ctrl+Z)" onClick={onUndo} disabled={!canUndo}>
+              <Undo2 size={18} />
+            </button>
+            <button className={styles.iconButton} title="Повторить (Ctrl+Y)" onClick={onRedo} disabled={!canRedo}>
+              <Redo2 size={18} />
+            </button>
+            <div className={styles.separator} />
           </>
         )}
         <div className={styles.modeToggleGroup}> {/* <-- Новая обертка */}

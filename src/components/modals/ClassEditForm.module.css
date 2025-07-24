@@ -1,0 +1,19 @@
+.editorLabel {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #374151;
+}
+
+.editorWrapper {
+    border-radius: 8px;
+    overflow: hidden; /* Чтобы скруглить углы у редактора */
+    margin-bottom: 16px;
+    border: 1px solid #d1d5db;
+}
+
+.editorWrapper:focus-within {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}

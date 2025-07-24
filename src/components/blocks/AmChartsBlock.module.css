@@ -1,0 +1,35 @@
+.wrapper {
+    margin: 1.5em 0;
+    width: 100%;
+}
+
+/* Стили для плейсхолдера, когда нет данных */
+.placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background-color: #f9fafb;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    width: 100%;
+    min-height: 200px; /* Минимальная высота, чтобы было видно */
+    color: #9ca3af;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin: 1.5em 0;
+    padding: 2rem;
+    text-align: center;
+}
+
+.placeholder:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.placeholder svg {
+    width: 48px;
+    height: 48px;
+    color: #9ca3af;
+}

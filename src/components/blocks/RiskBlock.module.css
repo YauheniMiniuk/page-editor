@@ -1,0 +1,113 @@
+.wrapper {
+    /* CSS переменные для управления темой */
+    --text-color: #374151;
+    --text-color-active: #ffffff;
+    --color-high: rgba(233, 69, 88, 1);
+    --bg-high-active: rgba(233, 69, 88, 0.55);
+    --color-medium: rgba(238, 205, 32, 1);
+    --bg-medium-active: rgba(238, 205, 32, 0.55);
+    --color-low: rgba(123, 192, 109, 1);
+    --bg-low-active: rgba(123, 192, 109, 0.55);
+    --color-none: rgba(145, 183, 254, 1);
+    --bg-none-active: rgba(145, 183, 254, 0.55);
+
+    width: 100%;
+    padding: 16px;
+}
+
+.darkTheme {
+    --text-color: #d1d5db;
+}
+
+.title {
+    text-align: right;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: var(--text-color);
+    margin: 0 5px 8px 0;
+}
+
+.rowsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.riskRow {
+    display: flex;
+    gap: 5px;
+    --border-width: 3px;
+    --border-radius: 10px;
+}
+
+/* Стили для всех дочерних элементов строки */
+.riskRow > div {
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease-in-out;
+}
+
+.valueBox {
+    flex: 0 0 50px;
+    justify-content: center;
+    font-weight: 800;
+    /* По умолчанию скрыт */
+    opacity: 0;
+    height: 0;
+    font-size: 0;
+    border-width: var(--border-width);
+    border-style: solid;
+}
+
+.labelBox {
+    flex: 1 1 auto;
+    padding-left: 10px;
+    font-weight: 600;
+    font-size: 16px;
+    border-width: var(--border-width);
+    border-style: solid;
+}
+
+/* Стили для АКТИВНОЙ строки */
+.active .valueBox {
+    opacity: 1;
+    height: 50px;
+    font-size: 18px;
+    color: var(--text-color-active);
+}
+
+.active .labelBox {
+    color: var(--text-color-active);
+    font-weight: 800;
+    font-size: 18px;
+}
+
+/* Применение цветов */
+.high { border-color: var(--color-high); }
+.high .labelBox { color: var(--color-high); }
+.high.active .valueBox { border-color: var(--color-high); background: var(--bg-high-active); }
+.high.active .labelBox { background: var(--bg-high-active); }
+
+.medium { border-color: var(--color-medium); }
+.medium .labelBox { color: var(--color-medium); }
+.medium.active .valueBox { border-color: var(--color-medium); background: var(--bg-medium-active); }
+.medium.active .labelBox { background: var(--bg-medium-active); }
+
+.low { border-color: var(--color-low); }
+.low .labelBox { color: var(--color-low); }
+.low.active .valueBox { border-color: var(--color-low); background: var(--bg-low-active); }
+.low.active .labelBox { background: var(--bg-low-active); }
+
+.none { border-color: var(--color-none); }
+.none .labelBox { color: var(--color-none); }
+.none.active .valueBox { border-color: var(--color-none); background: var(--bg-none-active); }
+.none.active .labelBox { background: var(--bg-none-active); }
+
+/* Адаптивность */
+@media(max-width: 480px) {
+    .riskRow { --border-width: 2px; }
+    .labelBox { font-size: 14px; }
+    .active .valueBox { height: 40px; font-size: 16px; }
+    .active .labelBox { font-size: 16px; }
+}

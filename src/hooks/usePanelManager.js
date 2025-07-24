@@ -4,7 +4,7 @@ import { useState } from 'react';
 export const usePanelManager = () => {
     const [activeLeftPanel, setActiveLeftPanel] = useState(null);
     const [panelContent, setPanelContent] = useState(null);
-    const [isPropertiesPanelVisible, setPropertiesPanelVisible] = useState(true);
+    const [isPropertiesPanelVisible, setPropertiesPanelVisible] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
 
     const handleToggleLeftPanel = (panelName) => {

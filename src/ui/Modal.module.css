@@ -1,0 +1,55 @@
+.overlay {
+    position: fixed;
+    inset: 0; /* Аналог top, right, bottom, left = 0 */
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modalWindow {
+    display: flex;
+    flex-direction: column;
+    background-color: #2c2c2c;
+    color: #f0f0f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: clamp(320px, 80vw, 1280px); /* Гибкая ширина с мин/макс значениями */
+    height: clamp(400px, 80vh, 900px);
+    overflow: hidden;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #444;
+    flex-shrink: 0; /* Заголовок не должен сжиматься */
+}
+
+.modalTitle {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.closeButton {
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.closeButton:hover {
+    color: #fff;
+}
+
+.modalBody {
+    flex-grow: 1; /* Тело занимает все доступное место */
+    overflow-y: auto; /* Появляется скролл, если контент не помещается */
+    padding: 1.5rem;
+}

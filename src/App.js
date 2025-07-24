@@ -7,6 +7,7 @@ import PagesDashboard from './components/PagesDashboard';
 import { BlockManagementProvider } from './contexts/BlockManagementContext';
 import { LayoutProvider } from './contexts/LayoutContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { GlobalStylesProvider } from './contexts/GlobalStylesContext';
 
 export default function App() {
   const [mode, setMode] = useState(EDITOR_MODS.VIEW)
@@ -19,22 +20,24 @@ export default function App() {
       <BlockManagementProvider>
         <LayoutProvider>
           <ThemeProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path='/' element={
-                  <PagesDashboard />
-                }
-                />
-                <Route
-                  path='/editor/:slug'
-                  element={<DndCanvasBuilder initialMode="edit" />}
-                />
-                <Route
-                  path='/page/:slug'
-                  element={<DndCanvasBuilder initialMode="view" />}
-                />
-              </Routes>
-            </BrowserRouter>
+            <GlobalStylesProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route path='/' element={
+                    <PagesDashboard />
+                  }
+                  />
+                  <Route
+                    path='/editor/:slug'
+                    element={<DndCanvasBuilder initialMode="edit" />}
+                  />
+                  <Route
+                    path='/page/:slug'
+                    element={<DndCanvasBuilder initialMode="view" />}
+                  />
+                </Routes>
+              </BrowserRouter>
+            </GlobalStylesProvider>
           </ThemeProvider>
         </LayoutProvider>
       </BlockManagementProvider>

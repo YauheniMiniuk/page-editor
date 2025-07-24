@@ -125,26 +125,29 @@ export default function PagesDashboard() {
         <div className={styles.pagesDashboard}>
             <h1>Панель управления страницами</h1>
             <button className={styles.createPage} onClick={() => navigate('/editor/new')}>Создать новую страницу</button>
-            <div className={styles.pagesList}>
-                {pages.map(page => (
-                    <div key={page.id} className={styles.pageItem}>
-                        <div className={styles.pageHeader}>
-                            <h2>{page.title} <small>(/{page.slug})</small></h2>
-                            <div className={styles.pageActions}>
-                                <button onClick={() => navigate(`/page/${page.slug}`)}>Смотреть</button>
-                                <button onClick={() => navigate(`/editor/${page.slug}`)}>Редактировать</button>
-                                <button className={styles.delete} onClick={() => handleDeletePage(page.slug)}>Удалить страницу</button>
-                                <button onClick={() => toggleVersions(page.id)}>
-                                    {expandedPageId === page.id ? 'Скрыть версии' : 'Показать версии'}
-                                </button>
+            <div className={styles.pagesListContainer}>
+                <div className={styles.pagesList}>
+                    {pages.map(page => (
+                        <div key={page.id} className={styles.pageItem}>
+                            <div className={styles.pageHeader}>
+                                <h2>{page.title} <small>(/{page.slug})</small></h2>
+                                <div className={styles.pageActions}>
+                                    <button onClick={() => navigate(`/page/${page.slug}`)}>Смотреть</button>
+                                    <button onClick={() => navigate(`/editor/${page.slug}`)}>Редактировать</button>
+                                    <button className={styles.delete} onClick={() => handleDeletePage(page.slug)}>Удалить страницу</button>
+                                    <button onClick={() => toggleVersions(page.id)}>
+                                        {expandedPageId === page.id ? 'Скрыть версии' : 'Показать версии'}
+                                    </button>
+                                </div>
                             </div>
+                            {expandedPageId === page.id && (
+                                <VersionList page={page} onActionComplete={fetchPages} />
+                            )}
                         </div>
-                        {expandedPageId === page.id && (
-                            <VersionList page={page} onActionComplete={fetchPages} />
-                        )}
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
+
         </div>
     );
 }

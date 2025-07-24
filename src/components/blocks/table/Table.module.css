@@ -1,0 +1,66 @@
+.tableWrapper {
+    width: 100%;
+    overflow-x: auto; /* Добавляем горизонтальный скролл для больших таблиц */
+}
+
+.tableWrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.tableWrapper th,
+.tableWrapper td {
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    text-align: left;
+    vertical-align: top;
+}
+
+.tableWrapper thead th {
+    font-weight: 600;
+    background-color: #f9fafb;
+}
+
+/* --- Стили, взятые из твоей темы --- */
+.tablepressCustom {
+	background: rgb(34, 37, 41);
+}
+
+.tablepressCustom table {
+	font-size: 14px;
+	color: #ccc;
+}
+
+.tablepressCustom th,
+.tablepressCustom td {
+	border: 0;
+	background-color: transparent;
+	color: #ccc;
+	transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.tablepressCustom tbody th,
+.tablepressCustom tbody td {
+	border: 1px solid #333;
+}
+
+/* Подсветка строки при наведении */
+.rowHover tbody tr:hover td {
+	background-color: rgb(41, 44, 47);
+}
+
+/* 🔥 Подсветка столбца при наведении */
+.columnHover {
+    background-color: rgb(54, 57, 61) !important;
+	color: #fff !important;
+}
+
+/* Стили для фиксированной шапки (пока не реализовано, но можно будет добавить) */
+.tablepressCustom thead th {
+	background-color: rgb(24, 27, 31);
+	color: #ccc;
+	/* position: sticky; */
+	/* top: 0; */
+	/* z-index: 10; */
+}

@@ -44,7 +44,6 @@ const MediaGrid = ({ onFileSelect, preselectedId }) => {
         setDetails(prev => ({ ...prev, [name]: value }));
     };
 
-    // --- ПОЛНЫЙ КОД ДЛЯ СОХРАНЕНИЯ ДЕТАЛЕЙ ---
     const handleDetailsSave = async () => {
         if (!selectedFile) return;
 
@@ -114,7 +113,7 @@ const MediaGrid = ({ onFileSelect, preselectedId }) => {
                                 className={`${styles.gridItem} ${selectedFile?.id === file.id ? styles.selected : ''}`}
                                 onClick={() => handleSelect(file)}
                             >
-                                <img src={file.filepath} alt={file.alt_text} className={styles.thumbnail} />
+                                <img src={'/api' + file.filepath} alt={file.alt_text} className={styles.thumbnail} />
                                 <span className={styles.fileName}>{file.filename}</span>
                             </button>
                         ))}

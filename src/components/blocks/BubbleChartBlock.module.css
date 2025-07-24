@@ -1,0 +1,31 @@
+.wrapper {
+    width: 100%;
+}
+
+/* Стили для панели редактора */
+.dataRow, .labelRow {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.dataRow > div { /* Stretch input wrappers */
+    flex: 1;
+}
+.dataRow > button { /* Keep button small */
+    flex-shrink: 0;
+}
+
+.labelRow {
+    flex-wrap: wrap;
+}
+.labelRow > div:nth-child(1), .labelRow > div:nth-child(2) {
+    flex: 1 1 100px; /* Оси X и Y */
+}
+.labelRow > div:nth-child(3) {
+    flex: 1 1 100%; /* Textarea на всю ширину */
+    margin-top: 8px;
+}

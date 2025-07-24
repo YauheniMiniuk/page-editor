@@ -11,9 +11,11 @@ import {
   outdentListItem,
   transformBlock,
   updateListItemContent,
-  deepCloneWithNewIds
+  deepCloneWithNewIds,
+  replaceBlockRecursive
 } from '../utils/blockUtils';
 import { useHistory } from './useHistory';
+import * as aiService from '../services/aiService';
 
 const useBlockManagement = (initialBlocks = []) => {
   const {
@@ -36,6 +38,9 @@ const useBlockManagement = (initialBlocks = []) => {
   const [mediaLibraryState, setMediaLibraryState] = useState({ isOpen: false, onSelect: null });
   const [isDesignModalOpen, setIsDesignModalOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiModalState, setAiModalState] = useState({ isOpen: false, blockId: null });
+  const [isGlobalStylesModalOpen, setGlobalStylesModalOpen] = useState(false);
 
   const addPattern = useCallback((newPattern) => {
     setPatterns(prev => [...prev, newPattern]);
@@ -178,6 +183,66 @@ const useBlockManagement = (initialBlocks = []) => {
     },
     openDesignModal: () => setIsDesignModalOpen(true),
     closeDesignModal: () => setIsDesignModalOpen(false),
+    generateBlockContent: async (blockId, userPrompt) => {
+      actions.setInlineEditing(false);
+
+      setIsGenerating(true);
+      const notificationId = actions.addNotification('Магия AI в процессе...', 'loading', null);
+      try {
+        const { findBlockAndParent } = require('../utils/blockUtils');
+        const currentBlock = findBlockAndParent(blocks, blockId)?.block;
+        if (!currentBlock) throw new Error('Блок для генерации не найден.');
+        const currentContent = currentBlock.content || '';
+
+        const fullPrompt = `Ты должен переписать или создать текст для веб-страницы.
+            Текущий текст (может быть пустым): "${currentContent}"
+            Задача от пользователя: "${userPrompt}"`;
+
+        const newText = await aiService.generateText(fullPrompt);
+        alert("Получен ответ от модели: ", newText);
+        actions.update(blockId, { content: newText }); // Используем существующий action
+        actions.addNotification('Текст обновлен!', 'success');
+      } catch (error) {
+        actions.addNotification(`Ошибка генерации: ${error.message}`, 'error');
+      } finally {
+        actions.removeNotification(notificationId); // Убираем уведомление о процессе
+        setIsGenerating(false);
+      }
+    },
+    restructureBlockWithAI: async (blockId, userPrompt) => {
+      actions.setInlineEditing(false);
+      setIsGenerating(true);
+      const notificationId = actions.addNotification('AI перестраивает структуру...', 'loading', null);
+
+      try {
+        // Находим исходный блок
+        const originalBlock = findBlockAndParent(blocks, blockId)?.block;
+        if (!originalBlock) throw new Error('Исходный блок не найден.');
+
+        // Вызываем новый AI сервис
+        const newBlock = await aiService.modifyStructureWithAI(originalBlock, userPrompt);
+
+        // Используем новую утилиту для замены блока в дереве
+        setBlocks(prevBlocks => replaceBlockRecursive(prevBlocks, blockId, newBlock));
+
+        actions.addNotification('Структура успешно обновлена!', 'success');
+
+      } catch (error) {
+        console.error("Ошибка при реструктуризации блока:", error);
+        actions.addNotification(error.message, 'error');
+      } finally {
+        actions.removeNotification(notificationId);
+        setIsGenerating(false);
+      }
+    },
+    openAiModal: (blockId) => {
+      setAiModalState({ isOpen: true, blockId: blockId });
+    },
+    closeAiModal: () => {
+      setAiModalState({ isOpen: false, blockId: null });
+    },
+    openGlobalStylesModal: () => setGlobalStylesModalOpen(true),
+    closeGlobalStylesModal: () => setGlobalStylesModalOpen(false),
 
   }), [selectedBlockId, setBlocks, undo, redo, copiedStyles, blocks]);
 
@@ -196,6 +261,9 @@ const useBlockManagement = (initialBlocks = []) => {
     mediaLibraryState,
     notifications,
     isDesignModalOpen,
+    isGenerating,
+    aiModalState,
+    isGlobalStylesModalOpen
   };
 };
 

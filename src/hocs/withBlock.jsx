@@ -1,14 +1,13 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import classNames from 'classnames';
-import { motion } from 'framer-motion'; // <-- Импортируем motion
+import { motion } from 'framer-motion';
 import BlockToolbar from '../components/common/BlockToolbar';
 import { getVariantClasses } from '../utils/styleUtils';
 import styles from './withBlock.module.css';
 import { useBlockManager } from '../contexts/BlockManagementContext';
-import ContextMenu from '../ui/ContextMenu';
-import { CopyStylesIcon, DuplicateIcon, PasteStylesIcon } from '../utils/icons';
-import { SaveIcon, TrashIcon } from 'lucide-react';
+import { useGlobalStyles } from '../contexts/GlobalStylesContext';
+import GlobalStylesPanel from '../components/panels/GlobalStylesPanel';
 
 export const withBlock = (BlockComponent) => {
     const MotionBlockComponent = motion(BlockComponent);
@@ -83,6 +82,9 @@ export const withBlock = (BlockComponent) => {
         };
 
         const finalClassName = classNames(
+            block.props?.className,
+
+            // Все остальное оставляем как было.
             getVariantClasses(block.variants, blockStyles),
             {
                 [styles.selected]: isSelected && isEditMode,
@@ -136,6 +138,7 @@ export const withBlock = (BlockComponent) => {
     });
 
     WrappedComponent.displayName = `withBlock(${BlockComponent.displayName || BlockComponent.name || 'Component'})`;
+
     WrappedComponent.blockInfo = BlockComponent.blockInfo;
     WrappedComponent.blockStyles = BlockComponent.blockStyles;
 

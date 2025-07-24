@@ -16,6 +16,7 @@ import CustomUnitInput from '../../ui/CustomUnitInput';
 import { defaultData as columnDefaultData } from './ColumnBlock';
 import ColumnBlock from './ColumnBlock';
 import ToolbarButton from '../../ui/ToolbarButton';
+import Input from '../../ui/Input';
 
 // --- Компонент ---
 const ColumnsBlock = forwardRef(({ block, children, className, style, ...rest }, ref) => {
@@ -29,7 +30,7 @@ const ColumnsBlock = forwardRef(({ block, children, className, style, ...rest },
       [styles[`variant-align-${variants.align}`]]: variants.align,
       [styles[`variant-direction-${variants.direction}`]]: variants.direction,
       [styles[`variant-justifyContent-${variants.justifyContent}`]]: variants.justifyContent,
-      [styles[`variant-alignItems-${variants.verticalAlign}`]]: variants.verticalAlign,
+      [styles[`variant-verticalAlign-${variants.verticalAlign}`]]: variants.verticalAlign,
       [styles['variant-stackOnMobile-true']]: variants.stackOnMobile,
     }
   );
@@ -51,7 +52,7 @@ ColumnsBlock.blockInfo = {
   isContainer: true,
   layoutDirection: 'row',
   allowedBlocks: ['core/column'],
-  supports: { reusable: true, anchor: true },
+  supports: { reusable: true, anchor: true, customClassName: true, },
 
   defaultData: () => ({
     type: 'core/columns',
@@ -204,6 +205,14 @@ ColumnsBlock.blockInfo = {
             label="Внутренние (padding)"
             value={styles.padding || ''}
             onChange={(val) => handleStyleChange({ padding: val })}
+          />
+        </Tab>
+        <Tab title="Дополнительно">
+          <Input
+            label="HTML-якорь (ID)"
+            value={props.id || ''}
+            onChange={(e) => onChange({ props: { ...props, id: e.target.value } })}
+            helpText="Позволяет создать прямую ссылку на этот блок."
           />
         </Tab>
       </Tabs>

@@ -493,3 +493,26 @@ export const deepCloneWithNewIds = (block) => {
 
   return newBlock;
 };
+
+
+/**
+ * Рекурсивно находит и заменяет блок в дереве на новый объект.
+ * @param {Array} blocks - Массив блоков для поиска.
+ * @param {string} blockId - ID блока, который нужно заменить.
+ * @param {object} newBlock - Новый объект блока.
+ * @returns {Array} - Новый массив блоков с замененным элементом.
+ */
+export const replaceBlockRecursive = (blocks, blockId, newBlock) => {
+  return blocks.map(b => {
+    if (b.id === blockId) {
+      // Если ID совпал, возвращаем новый блок
+      return newBlock;
+    }
+    // Если у блока есть дети, рекурсивно вызываем функцию для них
+    if (b.children?.length) {
+      return { ...b, children: replaceBlockRecursive(b.children, blockId, newBlock) };
+    }
+    // Иначе просто возвращаем блок как есть
+    return b;
+  });
+};

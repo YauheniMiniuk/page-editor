@@ -1,0 +1,43 @@
+.wrapper {
+    width: 100%;
+}
+
+.title {
+    font-size: 1.25em;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-left: 10px; /* Небольшой отступ, чтобы соответствовать графику */
+}
+
+/* Стили для панели редактора */
+.axisRow {
+    display: flex;
+    gap: 8px;
+}
+
+.dataList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.dataRow {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.dataInputs {
+    flex-grow: 1;
+}
+
+.dataControls {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}

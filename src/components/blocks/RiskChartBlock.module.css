@@ -1,0 +1,123 @@
+.wrapper {
+    /* CSS переменные для управления темой и размерами */
+    --text-color: #374151;
+    --arrow-color: #6b7280;
+    --svg-stroke-color: #6b7280;
+    --block-height: 40px;
+    --base-block-width: 40px;
+    --risk-block-width: 80px;
+    --block-font-size: 1rem;
+    --block-outline-width: 2px;
+    
+    padding: 20px 10px;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.darkTheme {
+    --text-color: #d1d5db;
+    --arrow-color: #9ca3af;
+    --svg-stroke-color: #9ca3af;
+}
+
+.chart {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.chartContainer {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: end;
+    gap: 2px;
+    margin-bottom: 8px;
+}
+
+.baseRiskBlock, .riskBlock {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    outline: var(--block-outline-width) solid;
+    height: var(--block-height);
+    font-size: var(--block-font-size);
+    transition: background-color 0.2s;
+}
+
+.baseRiskBlock {
+    width: var(--base-block-width);
+    flex-shrink: 0;
+}
+.riskBlock {
+    flex-grow: 1; /* Позволяет блокам растягиваться */
+    min-width: var(--risk-block-width);
+}
+
+.blockLabel {
+    display: block;
+    color: var(--text-color);
+}
+
+/* Цвета */
+.neutral { outline-color: #91b7fe; }
+.neutral.active { background-color: rgba(145, 183, 254, 0.2); }
+
+.low { outline-color: #7bc06d; }
+.low.active { background-color: rgba(123, 192, 109, 0.2); }
+
+.medium { outline-color: #eecd20; }
+.medium.active { background-color: rgba(238, 205, 32, 0.2); }
+
+.high { outline-color: #e94558; }
+.high.active { background-color: rgba(233, 69, 88, 0.2); }
+
+/* Стрелка */
+.arrow {
+    position: absolute;
+    top: -28px;
+    transform: translateX(-50%);
+}
+.arrowSvg {
+    fill: var(--arrow-color);
+    width: 24px;
+    height: 24px;
+}
+
+/* Подписи */
+.labels {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-color);
+    font-size: 0.9em;
+}
+.labelGroup {
+    display: flex;
+    flex-direction: column;
+    width: 45%;
+}
+.labelGroup.right {
+    align-items: flex-end;
+}
+.labelGroup svg {
+    width: 100%;
+    height: 10px;
+    stroke: var(--svg-stroke-color);
+    fill: var(--svg-stroke-color);
+}
+.labelGroup.right svg {
+    transform: scaleX(-1);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .wrapper { --block-height: 30px; --base-block-width: 30px; --risk-block-width: 60px; --block-font-size: 0.9rem; }
+}
+@media (max-width: 480px) {
+    .wrapper { --block-height: 25px; --base-block-width: 25px; --risk-block-width: 50px; --block-font-size: 0.8rem; }
+    .labels { font-size: 0.75em; }
+}
